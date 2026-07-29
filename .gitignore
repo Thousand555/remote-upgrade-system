@@ -1,0 +1,42 @@
+# Keil uVision per-user files
+*.uvguix.*
+*.uvoptx
+
+# Keil build outputs and intermediates
+firmware/stm32_app/MDK-ARM/stm32_app/
+firmware/stm32_bootloader/MDK-ARM/stm32_bootloader/
+*.axf
+*.bin
+*.crf
+*.d
+*.dep
+*.hex
+*.htm
+*.iex
+*.lnp
+*.lst
+*.map
+*.o
+*.Bak
+
+# STM32CubeIDE / generic embedded build directories
+Debug/
+Release/
+build/
+
+# ESP-IDF
+sdkconfig.old
+managed_components/
+
+# Python tools and server
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Editors and operating system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
