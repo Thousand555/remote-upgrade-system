@@ -24,6 +24,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "flash_layout.h"
+#include "flash_if.h"
+#include "flash_if_self_test.h"
+#include "boot_metadata.h"
+#include "boot_metadata_self_test.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,10 +38,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define APP_BASE_ADDR       0x08020000UL
-#define APP_MAX_SIZE        0x000E0000UL
-#define APP_END_ADDR        (APP_BASE_ADDR + APP_MAX_SIZE)
-
 #define SRAM_START_ADDR     0x20000000UL
 #define SRAM_END_ADDR       0x20020000UL
 
@@ -44,18 +45,21 @@
 #define CCM_END_ADDR        0x10010000UL
 
 /*
- * M1/M2 jump validation keeps text logs enabled. Set to 0 before USART1
- * enters Modbus RTU protocol mode; protocol mode must never emit raw text.
+ * The debug target defines LOG_ENABLE=1 for M1/M2 diagnostics. The normal
+ * target keeps the default zero; protocol mode must never emit raw text.
  */
 #ifndef LOG_ENABLE
-    #define LOG_ENABLE  0   
+    #define LOG_ENABLE  0
+#endif
+
+#if FLASH_IF_SELF_TEST_ENABLE && BOOT_METADATA_SELF_TEST_ENABLE
+#error "Enable only one destructive Flash self-test at a time"
 #endif
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 #if LOG_ENABLE
-//#define BOOT_LOG(...)       printf(__VA_ARGS__)
 #define BOOT_LOG(fmt, ...)   printf("[BOOT] " fmt "\r\n", ##__VA_ARGS__)
 #else
 #define BOOT_LOG(...)       ((void)0)
@@ -71,15 +75,17 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+#if !FLASH_IF_SELF_TEST_ENABLE && !BOOT_METADATA_SELF_TEST_ENABLE
 static uint8_t Boot_IsAppValid(void);
 static void Boot_JumpToApp(void);
 
 /*
- * ARM Compiler 5???????
+ * ARM Compiler 5 passes the first two arguments in R0 and R1.
  * R0 = APP MSP
  * R1 = APP Reset_Handler
  */
 void Boot_BranchToApp(uint32_t app_msp, uint32_t app_reset);
+#endif
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -118,20 +124,108 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-	BOOT_LOG("\r\nBootloader started");
+	BOOT_LOG("Bootloader started");
 	BOOT_LOG("APP address: 0x%08lX",
-					 (unsigned long)APP_BASE_ADDR);
-				 
-		if (Boot_IsAppValid() != 0U)
-	{
-			BOOT_LOG("APP is valid, jumping...\r\n");
+					 (unsigned long)FLASH_LAYOUT_APP_BASE_ADDR);
 
-			Boot_JumpToApp();
-	}
-	else
+#if FLASH_IF_SELF_TEST_ENABLE
+	BOOT_LOG("WARNING: destructive Flash self-test enabled");
 	{
-		BOOT_LOG("No valid APP");
+		flash_if_status_t self_test_status;
+		uint32_t self_test_started_at;
+		uint32_t self_test_elapsed_ms;
+
+		self_test_started_at = HAL_GetTick();
+		self_test_status = flash_if_self_test_run();
+		self_test_elapsed_ms = HAL_GetTick() - self_test_started_at;
+
+		BOOT_LOG("Flash self-test status=%u, elapsed=%lu ms, HAL=0x%08lX, failed=0x%08lX",
+				 (unsigned int)self_test_status,
+				 (unsigned long)self_test_elapsed_ms,
+				 (unsigned long)flash_if_get_last_hal_error(),
+				 (unsigned long)flash_if_get_last_failure_address());
 	}
+#elif BOOT_METADATA_SELF_TEST_ENABLE
+	BOOT_LOG("WARNING: destructive Metadata self-test enabled");
+	{
+		boot_metadata_record_t latest_record;
+		boot_metadata_status_t metadata_status;
+		uint32_t free_record_count;
+		uint32_t self_test_started_at;
+		uint32_t self_test_elapsed_ms;
+
+		self_test_started_at = HAL_GetTick();
+		metadata_status = boot_metadata_self_test_run();
+		self_test_elapsed_ms = HAL_GetTick() - self_test_started_at;
+
+		BOOT_LOG("Metadata self-test status=%u, elapsed=%lu ms, HAL=0x%08lX, failed=0x%08lX",
+				 (unsigned int)metadata_status,
+				 (unsigned long)self_test_elapsed_ms,
+				 (unsigned long)boot_metadata_get_last_hal_error(),
+				 (unsigned long)boot_metadata_get_last_failure_address());
+
+		if ((metadata_status == BOOT_METADATA_OK) &&
+			(boot_metadata_load_latest(&latest_record) == BOOT_METADATA_OK) &&
+			(boot_metadata_get_free_record_count(&free_record_count) ==
+			 BOOT_METADATA_OK))
+		{
+			BOOT_LOG("Metadata latest sequence=%lu, state=%u, free=%lu/%lu",
+					 (unsigned long)latest_record.sequence_number,
+					 (unsigned int)latest_record.state,
+					 (unsigned long)free_record_count,
+					 (unsigned long)BOOT_METADATA_RECORD_CAPACITY);
+		}
+	}
+#else
+	{
+		boot_metadata_record_t latest_record;
+		boot_metadata_status_t metadata_status;
+		uint8_t metadata_allows_boot;
+
+		metadata_status = boot_metadata_load_latest(&latest_record);
+		metadata_allows_boot = 0U;
+
+		if (metadata_status == BOOT_METADATA_OK)
+		{
+			BOOT_LOG("Metadata sequence=%lu, state=%u, received=%lu/%lu",
+					 (unsigned long)latest_record.sequence_number,
+					 (unsigned int)latest_record.state,
+					 (unsigned long)latest_record.received_bytes,
+					 (unsigned long)latest_record.image_size);
+			metadata_allows_boot = boot_metadata_state_allows_app_boot(
+				(boot_state_t)latest_record.state) ? 1U : 0U;
+		}
+		else if (metadata_status == BOOT_METADATA_EMPTY)
+		{
+			BOOT_LOG("Metadata is empty");
+			metadata_allows_boot = 1U;
+		}
+		else if (metadata_status == BOOT_METADATA_CORRUPT)
+		{
+			BOOT_LOG("WARNING: Metadata is corrupt; using APP vector fallback");
+			metadata_allows_boot = 1U;
+		}
+		else
+		{
+			BOOT_LOG("Metadata scan failed, status=%u",
+					 (unsigned int)metadata_status);
+		}
+
+		if ((metadata_allows_boot != 0U) && (Boot_IsAppValid() != 0U))
+		{
+			BOOT_LOG("APP is valid, jumping...");
+			Boot_JumpToApp();
+		}
+		else if (metadata_allows_boot == 0U)
+		{
+			BOOT_LOG("Metadata requires recovery mode");
+		}
+		else
+		{
+			BOOT_LOG("No valid APP");
+		}
+	}
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -208,6 +302,7 @@ int fputc(int ch, FILE *stream)
     return ch;
 }
 
+#if !FLASH_IF_SELF_TEST_ENABLE && !BOOT_METADATA_SELF_TEST_ENABLE
 static uint8_t Boot_IsAppValid(void)
 {
     uint32_t app_msp;
@@ -216,29 +311,30 @@ static uint8_t Boot_IsAppValid(void)
     uint8_t msp_valid;
     uint8_t reset_valid;
 
-    app_msp = *(volatile uint32_t *)APP_BASE_ADDR;
-    app_reset = *(volatile uint32_t *)(APP_BASE_ADDR + 4U);
+    app_msp = *(volatile uint32_t *)FLASH_LAYOUT_APP_BASE_ADDR;
+    app_reset = *(volatile uint32_t *)(FLASH_LAYOUT_APP_BASE_ADDR + 4U);
 
     /*
-     * APP???????SRAM,?????CCM RAM?
-     * ??????RAM?????
+     * The initial stack pointer may be at the top of SRAM or CCM RAM.
+     * ARM AAPCS requires the stack to be 8-byte aligned at public interfaces.
      */
     msp_valid =
-        (((app_msp >= SRAM_START_ADDR) &&
-          (app_msp <= SRAM_END_ADDR)) ||
-         ((app_msp >= CCM_START_ADDR) &&
-          (app_msp <= CCM_END_ADDR))) ? 1U : 0U;
+        ((((app_msp >= SRAM_START_ADDR) &&
+           (app_msp <= SRAM_END_ADDR)) ||
+          ((app_msp >= CCM_START_ADDR) &&
+           (app_msp <= CCM_END_ADDR))) &&
+         ((app_msp & 0x7UL) == 0UL)) ? 1U : 0U;
 
     /*
-     * Cortex-M?????????1,??Thumb???
-     * ??????????????
+     * Cortex-M reset vectors must have the Thumb bit set. The actual reset
+     * handler address must remain inside the application partition.
      */
     reset_address = app_reset & ~1UL;
 
     reset_valid =
         (((app_reset & 1UL) != 0UL) &&
-         (reset_address >= APP_BASE_ADDR) &&
-         (reset_address < APP_END_ADDR)) ? 1U : 0U;
+         (reset_address >= FLASH_LAYOUT_APP_BASE_ADDR) &&
+         (reset_address < FLASH_LAYOUT_APP_END_ADDR)) ? 1U : 0U;
 
     return ((msp_valid != 0U) &&
             (reset_valid != 0U)) ? 1U : 0U;
@@ -256,34 +352,32 @@ static void Boot_JumpToApp(void)
     }
 
     app_msp =
-        *(volatile uint32_t *)APP_BASE_ADDR;
+        *(volatile uint32_t *)FLASH_LAYOUT_APP_BASE_ADDR;
 
     app_reset =
-        *(volatile uint32_t *)(APP_BASE_ADDR + 4U);
+        *(volatile uint32_t *)(FLASH_LAYOUT_APP_BASE_ADDR + 4U);
 
     /*
-     * ???????????
-     * ??printf???USART1??????
+     * Complete any blocking UART log transmission before peripheral reset.
+     * Protocol builds keep LOG_ENABLE at zero and do not emit text here.
      */
 
     /*
-     * ??Bootloader?????HAL????
-     * ??????????,????HAL???????
+     * Stop interrupts before resetting peripherals so no Bootloader ISR can
+     * execute while the hardware is being handed over to the application.
      */
+    __disable_irq();
+
     HAL_RCC_DeInit();
     HAL_DeInit();
 
-    /* ??SysTick */
+    /* Stop the Bootloader SysTick source. */
     SysTick->CTRL = 0U;
     SysTick->LOAD = 0U;
     SysTick->VAL  = 0U;
 
-    /* ????,????NVIC */
-    __disable_irq();
-
     /*
-     * ????????????
-     * Cortex-M4 NVIC???8?32?????
+     * STM32F407 exposes up to eight 32-bit NVIC enable/pending banks.
      */
     for (index = 0U; index < 8U; index++)
     {
@@ -291,30 +385,28 @@ static void Boot_JumpToApp(void)
         NVIC->ICPR[index] = 0xFFFFFFFFUL;
     }
 
-    /* ?????SysTick?PendSV */
+    /* Clear pending SysTick and PendSV exceptions. */
     SCB->ICSR =
         SCB_ICSR_PENDSTCLR_Msk |
         SCB_ICSR_PENDSVCLR_Msk;
 
-    /* ????????? */
+    /* Remove masks inherited from the Bootloader except PRIMASK. */
     __set_BASEPRI(0U);
     __set_FAULTMASK(0U);
 
-    /* ??APP?????? */
-    SCB->VTOR = APP_BASE_ADDR;
+    /* Relocate the vector table before branching. */
+    SCB->VTOR = FLASH_LAYOUT_APP_BASE_ADDR;
 
     __DSB();
     __ISB();
 
     /*
-     * ???????:
-     * 1. ???MSP
-     * 2. ??????
-     * 3. ??Reset_Handler
+     * The assembly helper switches to MSP, enables interrupts only after all
+     * sources have been disabled, and branches to the APP Reset_Handler.
      */
     Boot_BranchToApp(app_msp, app_reset);
 
-    /* ????????? */
+    /* The application reset handler must never return. */
     while (1)
     {
     }
@@ -323,20 +415,21 @@ static void Boot_JumpToApp(void)
 __asm void Boot_BranchToApp(uint32_t app_msp,
                             uint32_t app_reset)
 {
-    /* Thread????MSP,??????? */
+    /* Select MSP for Thread mode and privileged execution. */
     MOVS    R2, #0
     MSR     CONTROL, R2
     ISB
 
-    /* ??APP?????? */
+    /* Install the application's initial main stack pointer. */
     MSR     MSP, R0
 
-    /* ??PRIMASK,?????? */
+    /* Clear PRIMASK after all Bootloader interrupt sources were disabled. */
     CPSIE   I
 
-    /* ???APP Reset_Handler */
+    /* Branch to the application's Reset_Handler (Thumb bit is validated). */
     BX      R1
 }
+#endif
 
 /* USER CODE END 4 */
 

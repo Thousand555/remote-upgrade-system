@@ -37,14 +37,13 @@
 #define APP_BASE_ADDR      0x08020000UL
 
 #ifndef LOG_ENABLE
-    #define LOG_ENABLE  0   
+    #define LOG_ENABLE  0
 #endif
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 #if LOG_ENABLE
-//#define APP_LOG(...)       printf(__VA_ARGS__)
 #define APP_LOG(fmt, ...)   printf("[APP] " fmt "\r\n", ##__VA_ARGS__)
 #else
 #define APP_LOG(...)       ((void)0)
@@ -104,17 +103,17 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	APP_LOG("STM32 APP started\r\n");
-  APP_LOG("Version: %s\r\n", APP_VERSION);
-  APP_LOG("APP base: 0x%08lX\r\n", APP_BASE_ADDR);
-	APP_LOG("VTOR     : 0x%08lX\r\n\r\n",
+  APP_LOG("STM32 APP started");
+  APP_LOG("Version: %s", APP_VERSION);
+  APP_LOG("APP base: 0x%08lX", APP_BASE_ADDR);
+	APP_LOG("VTOR     : 0x%08lX",
           (unsigned long)SCB->VTOR);
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		APP_LOG("LED is blinking...\r\n");
+		APP_LOG("LED is blinking...");
 		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
     HAL_Delay(500);
   }

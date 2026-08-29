@@ -1,0 +1,43 @@
+#ifndef FLASH_LAYOUT_H
+#define FLASH_LAYOUT_H
+
+#include <stdint.h>
+
+/* STM32F407ZGT6 internal Flash layout (1 MiB total). */
+#define FLASH_LAYOUT_FLASH_BASE_ADDR       0x08000000UL
+#define FLASH_LAYOUT_FLASH_END_ADDR        0x08100000UL
+
+#define FLASH_LAYOUT_BOOT_BASE_ADDR        0x08000000UL
+#define FLASH_LAYOUT_BOOT_MAX_SIZE         0x00010000UL
+
+#define FLASH_LAYOUT_METADATA_BASE_ADDR    0x08010000UL
+#define FLASH_LAYOUT_METADATA_MAX_SIZE     0x00010000UL
+#define FLASH_LAYOUT_METADATA_SECTOR       4UL
+
+#define FLASH_LAYOUT_APP_BASE_ADDR         0x08020000UL
+#define FLASH_LAYOUT_APP_MAX_SIZE          0x000E0000UL
+#define FLASH_LAYOUT_APP_END_ADDR          \
+    (FLASH_LAYOUT_APP_BASE_ADDR + FLASH_LAYOUT_APP_MAX_SIZE)
+
+/* Sectors 5 through 11 are seven contiguous 128 KiB APP sectors. */
+#define FLASH_LAYOUT_APP_FIRST_SECTOR      5UL
+#define FLASH_LAYOUT_APP_LAST_SECTOR       11UL
+#define FLASH_LAYOUT_APP_SECTOR_SIZE       0x00020000UL
+#define FLASH_LAYOUT_APP_SECTOR_COUNT      7UL
+#define FLASH_LAYOUT_PROGRAM_WORD_SIZE     4UL
+
+#if (FLASH_LAYOUT_BOOT_BASE_ADDR + FLASH_LAYOUT_BOOT_MAX_SIZE) != \
+    FLASH_LAYOUT_METADATA_BASE_ADDR
+#error "Bootloader and Metadata partitions are not contiguous"
+#endif
+
+#if (FLASH_LAYOUT_METADATA_BASE_ADDR + FLASH_LAYOUT_METADATA_MAX_SIZE) != \
+    FLASH_LAYOUT_APP_BASE_ADDR
+#error "Metadata and APP partitions are not contiguous"
+#endif
+
+#if FLASH_LAYOUT_APP_END_ADDR != FLASH_LAYOUT_FLASH_END_ADDR
+#error "APP partition does not end at the physical Flash boundary"
+#endif
+
+#endif /* FLASH_LAYOUT_H */

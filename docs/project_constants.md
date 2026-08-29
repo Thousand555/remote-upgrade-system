@@ -42,3 +42,41 @@ Modbus RTU ADU最大为256字节。升级请求在功能码后的Data字段中�
 3. 正式Bootloader不主动发送文本或Modbus帧，只响应主站请求。
 4. 协议模式中的诊断信息写入内存日志缓冲区，由主站通过`GET_LOG`查询。
 5. 文本构建和协议构建通过编译配置明确区分，不能靠解析器猜测一段字节是日志还是固件。
+
+## Flash驱动约束
+
+| 参数 | 值 |
+| --- | --- |
+| 公共写入地址 | 相对`APP_BASE_ADDR`的offset，不接受绝对地址 |
+| 编程粒度 | 32-bit Word，4 bytes |
+| offset对齐 | 必须4字节对齐 |
+| 非最后数据块 | 长度必须是4的倍数 |
+| 最后数据块 | 允许不足4字节，驱动使用`0xFF`补齐最后一个Word |
+| 擦除范围 | 仅Sector 5～11，按镜像长度计算实际Sector数 |
+| 擦除电压范围 | `FLASH_VOLTAGE_RANGE_3`，对应当前3.3 V供电 |
+| Flash自测 | `FLASH_IF_SELF_TEST_ENABLE=0`为默认；设为1会擦除Sector 5 |
+
+## Metadata Journal
+
+| 参数 | 值 |
+| --- | --- |
+| Flash区域 | Sector 4，`0x08010000～0x0801FFFF` |
+| Record magic | `0x42544D44` |
+| Format version | 1 |
+| Commit marker | `0x434D4954`，最后一个Word写入 |
+| Record大小 | 76 bytes，固定且4字节对齐 |
+| Record容量 | 862条，末尾保留24 bytes不用 |
+| Record校验 | IEEE CRC32，覆盖`magic`至`error_code` |
+| 整理安全状态 | `EMPTY`、`APP_VALID`、`CONFIRMED` |
+| Metadata自测 | `BOOT_METADATA_SELF_TEST_ENABLE=0`为默认；设为1会擦除Sector 4 |
+
+Metadata追加先写Payload和CRC，最后写Commit marker。扫描只接受magic、版本、字段范围、CRC和Commit marker全部有效的记录；断电留下的半条记录会被跳过。启动新升级前必须按镜像大小预留足够的检查点记录，不能等到`RECEIVING`过程中才擦除Sector 4。
+
+## STM32构建模式
+
+| Keil目标/用途 | `LOG_ENABLE` | `FLASH_IF_SELF_TEST_ENABLE` | `BOOT_METADATA_SELF_TEST_ENABLE` |
+| --- | --- | --- | --- |
+| `stm32_bootloader`正式/协议构建 | 0（源码默认值） | 0（源码默认值） | 0（源码默认值） |
+| `stm32_bootloader_debug`文本调试 | 1 | 0（源码默认值） | 0（源码默认值） |
+| M3破坏性板上自测 | 1 | 手工设为1，测试后必须恢复为0 | 0 |
+| M4破坏性板上自测 | 1 | 0 | 手工设为1，测试后必须恢复为0 |

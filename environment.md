@@ -8,9 +8,9 @@
 - VS Code版本：1.130.0
 - Codex扩展版本：26.715.61943
 - Git版本：2.50.1.windows.1
-- Git仓库：已初始化，尚未创建首次提交
+- Git仓库：已初始化；基线提交`0181706 m0 & m1 init`
 - PowerShell版本：1.24.11911.0
-- Python版本：3.13.13
+- Python版本：3.13.13；当前Codex PowerShell环境的`PATH`尚未找到`python`
 - CMake版本：未安装
 - 主机C编译器： MinGW GCC 8.1.0
 
@@ -24,7 +24,7 @@
 - HSE频率：8 MHz
 - LSE：32.768 KHz
 - 供电电压：3.3 V
-- BOOT0上电电平：
+- BOOT0上电电平：未测量
 - 上电启动行为：已实测可以自动启动当前用户Flash中的程序
 - BOOT0结论：当前不是自定义Bootloader启动的阻塞项；后续硬件文档仍需补充实际电平和跳帽位置
 - NRST连接：xxx
@@ -71,6 +71,7 @@
 - 编译器完整版本：5.06 update 7 (build 960)
 - UV4.exe路径：C:\Keil_v5\UV4
 - fromelf.exe路径：C:\Keil_v5\ARM\ARM_Compiler_5.06u7\bin64\fromelf.exe
+- Pack验证：Codex受限命令行环境曾无法解析`Keil.STM32F4xx_DFP.2.17.1`和`ARM.CMSIS.4.5.0`；开发者已在uVision GUI中完成Rebuild，工程为0 Error、0 Warning，因此Pack不再是项目阻塞项
 
 ## ESP32
 
@@ -78,8 +79,9 @@
 - ESP32-S3模组：ESP32-S3-WROOM-1-N16R8
 - Flash容量：16MB
 - PSRAM容量：8MB
-- ESP-IDF版本：2.1.0
-- ESP-IDF路径：作为vscode 插件使用
+- ESP-IDF VS Code扩展版本：2.1.0
+- ESP-IDF框架版本：xxx
+- ESP-IDF路径：通过VS Code扩展使用；当前Codex PowerShell环境未设置`IDF_PATH`且未找到`idf.py`
 
 ## 测试设备
 

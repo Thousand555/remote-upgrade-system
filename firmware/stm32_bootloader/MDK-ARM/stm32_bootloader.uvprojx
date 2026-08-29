@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Core/Inc;../App/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -418,6 +418,31 @@
               <FileName>stm32f4xx_hal_msp.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/stm32f4xx_hal_msp.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Application/User/Bootloader</GroupName>
+          <Files>
+            <File>
+              <FileName>flash_if.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/Src/flash_if.c</FilePath>
+            </File>
+            <File>
+              <FileName>flash_if_self_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/Src/flash_if_self_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>boot_metadata.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/Src/boot_metadata.c</FilePath>
+            </File>
+            <File>
+              <FileName>boot_metadata_self_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/Src/boot_metadata_self_test.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -845,7 +870,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx,LOG_ENABLE=1</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Core/Inc;../App/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -923,6 +948,31 @@
               <FileName>stm32f4xx_hal_msp.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/stm32f4xx_hal_msp.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Application/User/Bootloader</GroupName>
+          <Files>
+            <File>
+              <FileName>flash_if.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/Src/flash_if.c</FilePath>
+            </File>
+            <File>
+              <FileName>flash_if_self_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/Src/flash_if_self_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>boot_metadata.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/Src/boot_metadata.c</FilePath>
+            </File>
+            <File>
+              <FileName>boot_metadata_self_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/Src/boot_metadata_self_test.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -663,7 +663,7 @@ int main(void)
 - 先输出Bootloader日志
 - 自动跳入APP
 - APP SysTick正常
-- APP UART中断正常
+- APP USART1调试输出正常
 - APP复位后仍可正常启动
 
 这一阶段失败时，不要开始任何升级协议。
@@ -672,145 +672,130 @@ int main(void)
 
 # 九、第三阶段：实现STM32 Flash驱动
 
+本阶段只实现受保护的APP Flash驱动和显式板上自测，不混入Modbus、Metadata或整包镜像校验。`image_validator`在协议传输与CRC校验阶段再加入。
+
 建立模块：
 
 ```
 stm32_bootloader/
 └── App/
-    ├── flash_if.c
-    ├── flash_if.h
-    ├── image_validator.c
-    └── image_validator.h
+    ├── Inc/
+    │   ├── flash_layout.h
+    │   ├── flash_if.h
+    │   └── flash_if_self_test.h
+    └── Src/
+        ├── flash_if.c
+        └── flash_if_self_test.c
 ```
 
-## 9.1 必须提供的接口
+## 9.1 公共接口使用APP相对偏移
 
-```
-typedef enum {
-    FLASH_IF_OK = 0,
-    FLASH_IF_INVALID_ADDRESS,
-    FLASH_IF_ERASE_ERROR,
-    FLASH_IF_WRITE_ERROR,
-    FLASH_IF_VERIFY_ERROR
-} flash_if_status_t;
+协议层不能向Flash驱动传递任意绝对地址。驱动只接受相对`APP_BASE_ADDR`的offset，绝对地址在边界检查通过后由驱动内部计算：
+
+```c
+bool flash_if_is_app_range(uint32_t offset, uint32_t length);
+
+flash_if_status_t flash_if_get_erase_plan(
+    uint32_t image_size,
+    uint32_t *first_sector,
+    uint32_t *sector_count
+);
 
 flash_if_status_t flash_if_erase_app(uint32_t image_size);
 
-flash_if_status_t flash_if_write(
-    uint32_t address,
+flash_if_status_t flash_if_write_app(
+    uint32_t offset,
     const uint8_t *data,
-    uint32_t length
+    uint32_t length,
+    bool final_chunk
 );
 
-flash_if_status_t flash_if_verify(
-    uint32_t address,
+flash_if_status_t flash_if_verify_app(
+    uint32_t offset,
     const uint8_t *data,
-    uint32_t length
-);
-
-bool flash_if_is_app_range(
-    uint32_t address,
     uint32_t length
 );
 ```
+
+该设计使正常升级接口无法表示Bootloader或Metadata地址，形成第一层写保护。Flash驱动仍必须在每次调用时重新执行范围检查。
 
 ## 9.2 地址检查必须防溢出
 
-不能只判断：
+禁止只判断`offset + length <= APP_MAX_SIZE`，因为加法可能整数溢出。当前规则为：
 
-```
-address + length < APP_END_ADDR
-```
+```c
+if ((length == 0U) || (offset >= APP_MAX_SIZE)) {
+    return false;
+}
 
-因为加法可能整数溢出。
-
-推荐：
-
-```
-bool flash_if_is_app_range(uint32_t address, uint32_t length)
-{
-    if (length == 0U) {
-        return false;
-    }
-
-    if (address < APP_BASE_ADDR) {
-        return false;
-    }
-
-    if (address >= APP_END_ADDR) {
-        return false;
-    }
-
-    if (length > (APP_END_ADDR - address)) {
-        return false;
-    }
-
-    return true;
+if (length > (APP_MAX_SIZE - offset)) {
+    return false;
 }
 ```
 
+必须拒绝空数据、超出896 KiB的镜像、越界offset和构造出的32位整数溢出输入。
+
 ## 9.3 擦除策略
 
-根据镜像大小计算需要擦除的Sector：
+APP使用Sector 5～11，每个Sector为128 KiB。根据镜像大小计算实际擦除数量：
 
-```
-image_size = 200 KiB
-APP起点 = Sector 5
-只擦除覆盖镜像的Sector
+```c
+sector_count = 1U + ((image_size - 1U) / 0x20000U);
 ```
 
-不要每次无条件擦除Sector 5到11。
+边界期望如下：
 
-流程：
+| image_size | 擦除范围 |
+| --- | --- |
+| 1 byte | Sector 5 |
+| 128 KiB | Sector 5 |
+| 128 KiB + 1 byte | Sector 5～6 |
+| 896 KiB | Sector 5～11 |
+| 896 KiB + 1 byte | 拒绝 |
 
-```
-检查image_size
-→ 计算最后地址
-→ 地址映射到最后Sector
-→ 解锁Flash
-→ 清除错误标志
-→ 擦除对应Sector
-→ 检查返回状态
-→ 锁定Flash
-```
+擦除使用`FLASH_VOLTAGE_RANGE_3`，与当前3.3 V供电一致。Flash成功解锁后，无论擦除成功或失败都必须重新锁定；错误路径保存HAL错误码和失败Sector对应的起始地址。
 
-## 9.4 写入策略
+## 9.4 写入与分包对齐策略
 
-建议先使用32位Word编程：
+第一版使用32-bit Word编程，并采用以下固定规则：
 
-```
-每次写4字节
-最后不足4字节时填充0xFF
-写入后立即读回比较
-```
+- offset必须4字节对齐。
+- 非最后数据块的length必须是4的倍数。
+- 只有最后数据块允许不足4字节，并使用`0xFF`补齐最后一个Word。
+- 不允许把未对齐的每一个协议包分别补齐，否则下一包可能与上一包的补齐Word重叠。
+- 不使用未对齐的`uint32_t *`强制转换；逐字节组装Word。
+- 每写入一个Word立即读回比较。
+- 成功解锁后的所有返回路径都必须重新锁定Flash。
 
-实际编程并行度、供电电压要求和Flash状态位应按PM0081及对应HAL实现检查。
+协议的224-byte固件数据长度本身是4的倍数，因此除固件最后一包外都天然满足对齐要求。
 
-## 9.5 先用固定测试数据验证
+## 9.5 显式破坏性板上自测
 
-Bootloader先不要接收串口固件。
-
-在代码中准备一个小测试区或使用APP前部测试数据：
+普通和debug构建中，`FLASH_IF_SELF_TEST_ENABLE`均默认为0。只有准备好APP恢复镜像后，才可以手工设为1：
 
 ```
-擦除
-→ 写入256字节伪随机数据
-→ 读回
-→ 比较
-→ 输出结果
+边界与Sector计算检查
+→ 擦除Sector 5
+→ 写入256字节确定性测试序列
+→ 每Word立即读回
+→ 再逐字节完整校验
+→ 额外写入3字节最后块，验证`0xFF`补齐逻辑
+→ 比较Sector 0～4测试前后的哈希
+→ 输出状态、HAL错误码、失败地址和耗时
+→ 停留在Bootloader
 ```
 
-注意不要误擦Bootloader和元数据区。
+该测试会破坏当前APP。测试完成后必须通过DAP重新下载APP，并重新执行M2启动验证。自测宏不得提交为1，也不得在正式升级流程中自动触发。
 
 ## 9.6 阶段验收
 
-- 合法地址能够擦写
-- 非法地址被拒绝
-- 写Bootloader区域被拒绝
-- 写元数据区域必须通过单独接口
-- 写入后逐字节校验一致
-- Flash错误码可以输出
-- 擦除时间得到记录
+- 普通和debug两个Keil目标均为0 Error、0 Warning。
+- `1 byte`、`128 KiB`、`128 KiB + 1 byte`、`896 KiB`的Sector计算正确。
+- `896 KiB + 1 byte`、空数据、越界offset、整数溢出和错误对齐输入均被拒绝。
+- 实际擦除、写入和读回256 bytes通过。
+- Sector 0～4未发生变化，公共接口无法表示其地址。
+- Flash错误码和失败地址可查询，擦除测试耗时得到记录。
+- 恢复APP后，Bootloader跳转、VTOR、LED和USART1调试输出均不退化。
 
 ------
 
@@ -853,6 +838,7 @@ typedef struct __attribute__((packed))
 
     uint32_t error_code;
     uint32_t record_crc32;
+    uint32_t commit_marker;
 } boot_record_t;
 ```
 
@@ -860,7 +846,10 @@ typedef struct __attribute__((packed))
 
 ```
 #define BOOT_RECORD_MAGIC 0x42544D44UL
+#define BOOT_RECORD_COMMIT_MARKER 0x434D4954UL
 ```
+
+当前格式版本1的记录固定为76 bytes，64 KiB Sector 4可容纳862条，末尾24 bytes不使用。CRC覆盖`magic`到`error_code`；`record_crc32`写完后，最后再写`commit_marker`。扫描器只有在字段范围、CRC和提交标记全部有效时才接受记录，因此掉电留下的半条记录会被跳过。
 
 ## 10.3 写入策略
 
@@ -915,6 +904,8 @@ EMPTY
 
 不允许在`RECEIVING`过程中擦除整个Metadata扇区。
 
+开始新升级前应根据镜像大小和4 KiB检查点计算所需记录数。如果剩余槽位不足，必须在旧状态仍为`APP_VALID`或`CONFIRMED`时先整理，不能等到接收过程中才发现Journal已满。
+
 整理过程：
 
 ```
@@ -928,6 +919,10 @@ EMPTY
 - APP仍然有效时可以重新判断
 - APP无效时进入恢复模式
 - 最坏情况丢失断点，但不能跳入损坏APP
+
+## 10.6 M4显式板上自测
+
+M4提供默认关闭的`BOOT_METADATA_SELF_TEST_ENABLE`。设为1后自测会擦除Sector 4，并验证：空扇区扫描、连续追加、序号递增、活动状态拒绝整理、半写记录回退、安全状态整理，以及Bootloader和APP区域哈希保持不变。成功输出中应看到`status=0`、最新`sequence=3`、`state=7`以及`free=861/862`。测试后必须立即移除该宏并重新构建普通Bootloader。
 
 ------
 
@@ -1127,7 +1122,7 @@ BOOT_PROTOCOL_ACTIVE
 
 STM32作为Modbus从站，不应主动发送日志帧。这样未来接入RS485多节点后，不会因为多个节点同时打印日志而产生总线冲突。
 
-当前M1/M2阶段的APP和Bootloader文本日志可以暂时保留，用于验证跳转。开始实现UART升级协议时，必须将`APP_TEXT_LOG_ENABLE`和`BOOT_TEXT_LOG_ENABLE`都设为0，或改为写入可查询日志缓冲区。
+当前M1/M2阶段可使用APP和Bootloader的debug目标输出文本日志，用于验证跳转。开始实现UART升级协议时，必须使用`LOG_ENABLE=0`的普通目标，或将诊断信息写入可查询日志缓冲区。
 
 ## 11.9 YMODEM定位
 
@@ -1247,16 +1242,18 @@ UPDATE_REQUESTED
 
 擦除操作可能耗时较长。
 
-建议流程：
+Modbus RTU必须保持一问一答，STM32从站不能在同一次请求后主动发送第二个响应。建议流程：
 
 ```
 ESP发送ERASE
-STM32返回ERASE_ACCEPTED
-STM32执行擦除
-STM32返回ERASE_COMPLETED
+→ STM32校验Session和image_size
+→ STM32返回ERASE_ACCEPTED或BUSY
+→ STM32执行擦除并更新内部进度/结果
+→ ESP周期发送QUERY_PROGRESS
+→ STM32响应ERASING、COMPLETED或FAILED
 ```
 
-ESP的擦除超时应明显大于普通数据包超时。
+ESP对ERASE请求使用普通响应超时；擦除总超时由多次`QUERY_PROGRESS`轮询共同控制。轮询间隔第一版可取100 ms，整次擦除总超时建议先取60 s并在M3实测后收紧。重复ERASE请求必须按Session幂等处理，不能因为响应丢失而再次无条件擦除。
 
 ## 12.5 DATA命令处理
 
@@ -2492,6 +2489,8 @@ Flash写入时间
 # 二十八、推荐实施顺序
 
 严格按以下顺序：
+
+截至2026-08-29：M0～M4已完成。M3 APP Flash自测和M4 Metadata Journal自测均在开发板上通过，两个自测宏均已恢复为0；普通Bootloader扫描最新`CONFIRMED`记录后能够自动跳转APP。下一阶段为M5协议编解码和PC单元测试。详细记录见`docs/m2_verification.md`、`docs/m3_verification.md`和`docs/m4_verification.md`。
 
 ```
 M0：建立仓库和设计文档
