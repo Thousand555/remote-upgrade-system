@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../App/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Core/Inc;../App/Inc;../../common/Inc;../../../protocol/include;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -443,6 +443,46 @@
               <FileName>boot_metadata_self_test.c</FileName>
               <FileType>1</FileType>
               <FilePath>../App/Src/boot_metadata_self_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>boot_upgrade.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/Src/boot_upgrade.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_rtu_transport.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../../common/Src/uart_rtu_transport.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Application/User/Protocol</GroupName>
+          <Files>
+            <File>
+              <FileName>crc16_modbus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../../../protocol/src/crc16_modbus.c</FilePath>
+            </File>
+            <File>
+              <FileName>protocol_byte_order.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../../../protocol/src/protocol_byte_order.c</FilePath>
+            </File>
+            <File>
+              <FileName>modbus_rtu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../../../protocol/src/modbus_rtu.c</FilePath>
+            </File>
+            <File>
+              <FileName>modbus_rtu_stream.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../../../protocol/src/modbus_rtu_stream.c</FilePath>
+            </File>
+            <File>
+              <FileName>upgrade_protocol.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../../../protocol/src/upgrade_protocol.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -868,9 +908,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>USE_HAL_DRIVER,STM32F407xx,LOG_ENABLE=1</Define>
+              <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../App/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Core/Inc;../App/Inc;../../common/Inc;../../../protocol/include;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -973,6 +1013,46 @@
               <FileName>boot_metadata_self_test.c</FileName>
               <FileType>1</FileType>
               <FilePath>../App/Src/boot_metadata_self_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>boot_upgrade.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../App/Src/boot_upgrade.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_rtu_transport.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../../common/Src/uart_rtu_transport.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Application/User/Protocol</GroupName>
+          <Files>
+            <File>
+              <FileName>crc16_modbus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../../../protocol/src/crc16_modbus.c</FilePath>
+            </File>
+            <File>
+              <FileName>protocol_byte_order.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../../../protocol/src/protocol_byte_order.c</FilePath>
+            </File>
+            <File>
+              <FileName>modbus_rtu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../../../protocol/src/modbus_rtu.c</FilePath>
+            </File>
+            <File>
+              <FileName>modbus_rtu_stream.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../../../protocol/src/modbus_rtu_stream.c</FilePath>
+            </File>
+            <File>
+              <FileName>upgrade_protocol.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../../../protocol/src/upgrade_protocol.c</FilePath>
             </File>
           </Files>
         </Group>

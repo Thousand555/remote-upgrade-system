@@ -1,0 +1,46 @@
+#ifndef UPGRADE_COMMANDS_H
+#define UPGRADE_COMMANDS_H
+
+#include <stdint.h>
+
+typedef enum
+{
+    UPG_SUB_HELLO = 0x01,
+    UPG_SUB_GET_INFO = 0x02,
+    UPG_SUB_ENTER_BOOT = 0x03,
+    UPG_SUB_START = 0x10,
+    UPG_SUB_ERASE = 0x11,
+    UPG_SUB_DATA = 0x12,
+    UPG_SUB_QUERY_PROGRESS = 0x13,
+    UPG_SUB_VERIFY = 0x14,
+    UPG_SUB_ACTIVATE = 0x15,
+    UPG_SUB_ABORT = 0x16,
+    UPG_SUB_GET_LOG = 0x20
+} upgrade_subfunction_t;
+
+typedef enum
+{
+    UPG_STATUS_OK = 0,
+    UPG_STATUS_BAD_FRAME = 1,
+    UPG_STATUS_BAD_CRC = 2,
+    UPG_STATUS_BAD_SESSION = 3,
+    UPG_STATUS_BAD_SEQUENCE = 4,
+    UPG_STATUS_BAD_OFFSET = 5,
+    UPG_STATUS_BAD_IMAGE_SIZE = 6,
+    UPG_STATUS_BAD_PRODUCT = 7,
+    UPG_STATUS_BAD_HARDWARE = 8,
+    UPG_STATUS_VERSION_REJECTED = 9,
+    UPG_STATUS_FLASH_ERROR = 10,
+    UPG_STATUS_VERIFY_FAILED = 11,
+    UPG_STATUS_BUSY = 12,
+    UPG_STATUS_TIMEOUT = 13
+} upgrade_status_t;
+
+typedef enum
+{
+    UPG_DATA_ACCEPT_NEW = 0,
+    UPG_DATA_DUPLICATE,
+    UPG_DATA_REJECT_GAP
+} upgrade_data_action_t;
+
+#endif /* UPGRADE_COMMANDS_H */

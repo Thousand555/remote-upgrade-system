@@ -2490,7 +2490,7 @@ Flash写入时间
 
 严格按以下顺序：
 
-截至2026-08-29：M0～M4已完成。M3 APP Flash自测和M4 Metadata Journal自测均在开发板上通过，两个自测宏均已恢复为0；普通Bootloader扫描最新`CONFIRMED`记录后能够自动跳转APP。下一阶段为M5协议编解码和PC单元测试。详细记录见`docs/m2_verification.md`、`docs/m3_verification.md`和`docs/m4_verification.md`。
+截至2026-08-29：M0～M6已完成。M3 APP Flash和M4 Metadata Journal通过板上自测；M5/M6协议测试通过；Bootloader和APP正式目标均为0 Error、0 Warning。M6已通过完整升级、CRC32校验、故障注入、断点续传、错误镜像恢复及连续10次升级稳定性验证。下一阶段进入M7，实现ESP32 UART本地主机。归档见`docs/m6_verification.md`和`docs/m6_test_evidence.md`。
 
 ```
 M0：建立仓库和设计文档

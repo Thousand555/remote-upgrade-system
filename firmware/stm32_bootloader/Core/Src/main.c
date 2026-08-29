@@ -29,6 +29,8 @@
 #include "flash_if_self_test.h"
 #include "boot_metadata.h"
 #include "boot_metadata_self_test.h"
+#include "boot_upgrade.h"
+#include "upgrade_config.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -181,6 +183,7 @@ int main(void)
 		boot_metadata_record_t latest_record;
 		boot_metadata_status_t metadata_status;
 		uint8_t metadata_allows_boot;
+		uint8_t app_is_valid;
 
 		metadata_status = boot_metadata_load_latest(&latest_record);
 		metadata_allows_boot = 0U;
@@ -211,16 +214,47 @@ int main(void)
 					 (unsigned int)metadata_status);
 		}
 
-		if ((metadata_allows_boot != 0U) && (Boot_IsAppValid() != 0U))
+		app_is_valid = Boot_IsAppValid();
+
+#if LOG_ENABLE
+		if ((metadata_allows_boot != 0U) && (app_is_valid != 0U))
 		{
 			BOOT_LOG("APP is valid, jumping...");
 			Boot_JumpToApp();
 		}
-		else if (metadata_allows_boot == 0U)
+#else
+		if (boot_upgrade_init())
+		{
+			if ((metadata_allows_boot != 0U) && (app_is_valid != 0U))
+			{
+				uint32_t wait_started_at;
+
+				wait_started_at = HAL_GetTick();
+				while (((HAL_GetTick() - wait_started_at) <
+				        UPGRADE_BOOT_WAIT_MS) &&
+				       (!boot_upgrade_has_activity()))
+				{
+					boot_upgrade_poll();
+				}
+
+				if (!boot_upgrade_has_activity())
+				{
+					Boot_JumpToApp();
+				}
+			}
+		}
+		else if ((metadata_allows_boot != 0U) && (app_is_valid != 0U))
+		{
+			/* A transport failure must not brick an otherwise valid APP. */
+			Boot_JumpToApp();
+		}
+#endif
+
+		if (metadata_allows_boot == 0U)
 		{
 			BOOT_LOG("Metadata requires recovery mode");
 		}
-		else
+		else if (app_is_valid == 0U)
 		{
 			BOOT_LOG("No valid APP");
 		}
@@ -235,6 +269,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+#if !FLASH_IF_SELF_TEST_ENABLE && !BOOT_METADATA_SELF_TEST_ENABLE && !LOG_ENABLE
+		boot_upgrade_poll();
+#endif
   }
   /* USER CODE END 3 */
 }

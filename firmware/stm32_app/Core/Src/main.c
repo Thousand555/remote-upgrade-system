@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "app_upgrade.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,6 +54,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+static uint32_t s_last_led_tick;
 
 /* USER CODE END PV */
 
@@ -98,6 +100,10 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+#if !LOG_ENABLE
+  (void)app_upgrade_init();
+#endif
+  s_last_led_tick = HAL_GetTick();
 
   /* USER CODE END 2 */
 
@@ -113,9 +119,15 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		APP_LOG("LED is blinking...");
-		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    HAL_Delay(500);
+#if !LOG_ENABLE
+    app_upgrade_poll();
+#endif
+		if ((HAL_GetTick() - s_last_led_tick) >= 500U)
+		{
+			APP_LOG("LED is blinking...");
+			HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+			s_last_led_tick = HAL_GetTick();
+		}
   }
   /* USER CODE END 3 */
 }

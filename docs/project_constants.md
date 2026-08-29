@@ -27,10 +27,24 @@
 | UART/RS485帧 | Modbus RTU |
 | 升级功能码 | `0x41`，用户自定义功能码 |
 | 协议版本 | 1 |
+| 升级Data头 | 18 bytes |
 | 单包固件数据 | 224 bytes |
+| 最大升级ADU | 246 bytes；通用Modbus RTU上限仍为256 bytes |
 | 字节序 | 多字节升级字段使用little-endian；Modbus CRC按标准低字节先发送 |
+| CRC16参数 | Modbus，初值`0xFFFF`、多项式`0xA001` |
+| t1.5 / t3.5 | 115200下固定为750 us / 1750 us |
+| 请求flags | 协议版本1固定为0 |
 | 最大重试次数 | 5 |
 | Metadata检查点 | 4096 bytes |
+| Modbus节点地址 | `1` |
+| 产品ID / 硬件ID | `0x0001` / `0x0001`，产品定型时必须替换 |
+| Bootloader版本 | `0x00010000` |
+| APP固件版本 | 单调递增`uint32_t`，`0`非法；M6暂不阻止降级 |
+| Bootloader恢复窗口 | 500 ms；有效APP且无协议请求时自动跳转 |
+| 普通请求超时 / 重试 | 1000 ms / 5次 |
+| 擦除总超时 / 查询间隔 | 60 s / 100 ms |
+| 镜像CRC32 | IEEE reflected，poly `0xEDB88320`、init/xorout `0xFFFFFFFF`，兼容Python `binascii.crc32()` |
+| 微秒时间源 | TIM2，1 MHz自由运行；M6中由共享传输模块直接配置并独占 |
 | CAN逻辑块 | 192或256 bytes，待CAN阶段实测冻结 |
 
 Modbus RTU ADU最大为256字节。升级请求在功能码后的Data字段中预留子命令、版本、Session、Sequence、Offset和长度字段，因此固件数据固定为224字节，不使用原方案中的512字节。

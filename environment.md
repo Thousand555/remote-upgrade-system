@@ -51,6 +51,7 @@
 - 单包固件数据：224字节
 - 开发阶段：未连接协议主站时，允许APP或M1/M2 Bootloader输出文本日志
 - 协议阶段：APP与Bootloader均关闭裸`printf`；运行日志保存在内存中，由主站通过协议查询
+- M6板级结果：APP/Bootloader无破坏探测、完整升级、断点续传、错误CRC32恢复和连续10次升级均通过；详见`docs/m6_test_evidence.md`
 
 ## DAP-Link
 
@@ -80,8 +81,8 @@
 - Flash容量：16MB
 - PSRAM容量：8MB
 - ESP-IDF VS Code扩展版本：2.1.0
-- ESP-IDF框架版本：xxx
-- ESP-IDF路径：通过VS Code扩展使用；当前Codex PowerShell环境未设置`IDF_PATH`且未找到`idf.py`
+- ESP-IDF框架版本：
+- ESP-IDF路径：
 
 ## 测试设备
 
