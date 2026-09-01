@@ -1,0 +1,2 @@
+# Destructive board-test build only. Production sdkconfig.defaults keeps this off.
+CONFIG_GATEWAY_RELIABILITY_TEST=y

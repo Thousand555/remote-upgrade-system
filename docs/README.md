@@ -1,0 +1,41 @@
+# 项目文档导航
+
+## 总体设计与环境
+
+- [`../基于 ESP32网关与 STM32 Bootloader 的多链路远程升级系统.md`](../基于%20ESP32网关与%20STM32%20Bootloader%20的多链路远程升级系统.md)：系统总体设计与里程碑顺序。
+- [`../environment.md`](../environment.md)：开发工具、板卡、串口和ESP-IDF环境。
+- [`project_constants.md`](project_constants.md)：Flash布局、版本、设备身份和固定参数。
+- [`protocol.md`](protocol.md)：UART/Modbus RTU升级协议。
+- [`m4_m6_learning_guide.md`](m4_m6_learning_guide.md)：Metadata Journal、协议和升级闭环学习说明。
+
+## 阶段验证
+
+- [`m2_verification.md`](m2_verification.md)：Bootloader跳转APP。
+- [`m3_verification.md`](m3_verification.md)：APP Flash擦写。
+- [`m4_verification.md`](m4_verification.md)：Metadata追加日志。
+- [`m5_verification.md`](m5_verification.md)：协议编解码。
+- [`m6_verification.md`](m6_verification.md)：PC经UART升级STM32。
+- [`m6_test_evidence.md`](m6_test_evidence.md)：M6板上证据。
+
+## M7归档
+
+- [`m7_archive_summary.md`](m7_archive_summary.md)：**当前M7阶段结论、板上状态、已完成项、延期项和恢复顺序的首要入口**。
+- [`m7_archive_manifest.md`](m7_archive_manifest.md)：固件、升级包、日志和关键源码SHA-256。
+- [`m7_verification.md`](m7_verification.md)：ESP32 UART本地主链路实现与基础验证。
+- [`m7_reliability_verification.md`](m7_reliability_verification.md)：R01～R15测试矩阵、步骤和验收出口。
+- [`m7_r02_test_evidence.md`](m7_r02_test_evidence.md)：STM32传输中复位。
+- [`m7_r03_test_evidence.md`](m7_r03_test_evidence.md)：ESP32传输中复位。
+- [`m7_r04_test_evidence.md`](m7_r04_test_evidence.md)：双端掉电和Journal缺陷修复。
+- [`m7_r05_test_evidence.md`](m7_r05_test_evidence.md)：UART短时/长时中断。
+- [`m7_r06_test_evidence.md`](m7_r06_test_evidence.md)：ABORT失败态和新Session恢复。
+
+归档时R07本地坏包拦截、R09冷启动10轮和生产版恢复后基线回归均为`DEFERRED`，
+不得从其他已通过用例推断这些项目已经通过。
+
+已生成`build/m7_document_archive_20260901.zip`，其中包含归档文档和现有原始日志/报告；
+其SHA-256记录在[`m7_archive_manifest.md`](m7_archive_manifest.md)。
+
+## 运行期证据位置
+
+自动化原始日志和生成报告位于仓库根目录`build/`。该目录被Git忽略；需要长期保存或
+移交时，应连同文件复制并按[`m7_archive_manifest.md`](m7_archive_manifest.md)复核哈希。

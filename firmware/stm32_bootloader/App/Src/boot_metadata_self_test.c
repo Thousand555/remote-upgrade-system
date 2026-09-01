@@ -209,19 +209,19 @@ boot_metadata_status_t boot_metadata_self_test_run(void)
                BOOT_METADATA_INTERNAL_ERROR : status;
     }
 
-    desired.state = (uint16_t)BOOT_STATE_CONFIRMED;
+    desired.state = (uint16_t)BOOT_STATE_PENDING_BOOT;
     desired.received_bytes = BOOT_METADATA_TEST_IMAGE_SIZE;
     status = boot_metadata_append(&desired, &latest);
     if ((status != BOOT_METADATA_OK) ||
         (!boot_metadata_self_test_record_matches(
-            &latest, BOOT_STATE_CONFIRMED, 3U,
+            &latest, BOOT_STATE_PENDING_BOOT, 3U,
             BOOT_METADATA_TEST_IMAGE_SIZE)))
     {
         return (status == BOOT_METADATA_OK) ?
                BOOT_METADATA_INTERNAL_ERROR : status;
     }
 
-    /* Force the safe-state compaction branch without wearing all 862 slots. */
+    /* A fully verified PENDING_BOOT image is safe to retain and compact. */
     status = boot_metadata_compact_if_needed(
         BOOT_METADATA_RECORD_CAPACITY - 1U);
     if (status != BOOT_METADATA_OK)
@@ -232,7 +232,7 @@ boot_metadata_status_t boot_metadata_self_test_run(void)
     status = boot_metadata_load_latest(&latest);
     if ((status != BOOT_METADATA_OK) ||
         (!boot_metadata_self_test_record_matches(
-            &latest, BOOT_STATE_CONFIRMED, 3U,
+            &latest, BOOT_STATE_PENDING_BOOT, 3U,
             BOOT_METADATA_TEST_IMAGE_SIZE)))
     {
         return (status == BOOT_METADATA_OK) ?
@@ -244,6 +244,17 @@ boot_metadata_status_t boot_metadata_self_test_run(void)
         (free_records != (BOOT_METADATA_RECORD_CAPACITY - 1U)))
     {
         return BOOT_METADATA_INTERNAL_ERROR;
+    }
+
+    desired.state = (uint16_t)BOOT_STATE_CONFIRMED;
+    status = boot_metadata_append(&desired, &latest);
+    if ((status != BOOT_METADATA_OK) ||
+        (!boot_metadata_self_test_record_matches(
+            &latest, BOOT_STATE_CONFIRMED, 4U,
+            BOOT_METADATA_TEST_IMAGE_SIZE)))
+    {
+        return (status == BOOT_METADATA_OK) ?
+               BOOT_METADATA_INTERNAL_ERROR : status;
     }
 
     if (boot_metadata_self_test_protected_hash() != protected_hash)

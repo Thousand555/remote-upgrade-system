@@ -382,6 +382,7 @@ bool boot_metadata_state_is_safe_to_compact(boot_state_t state)
 {
     return (state == BOOT_STATE_EMPTY) ||
            (state == BOOT_STATE_APP_VALID) ||
+           (state == BOOT_STATE_PENDING_BOOT) ||
            (state == BOOT_STATE_CONFIRMED);
 }
 

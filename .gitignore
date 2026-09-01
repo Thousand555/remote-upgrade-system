@@ -25,6 +25,7 @@ Release/
 build/
 
 # ESP-IDF
+firmware/esp32_gateway/sdkconfig
 sdkconfig.old
 managed_components/
 

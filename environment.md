@@ -76,13 +76,36 @@
 
 ## ESP32
 
-- 开发板型号：xxx
+- 开发板型号：具体厂牌未标注；引脚以仓库根目录`ESP32-S3-WROOM-1-N16R8 开发板.jpg`为准
 - ESP32-S3模组：ESP32-S3-WROOM-1-N16R8
 - Flash容量：16MB
 - PSRAM容量：8MB
-- ESP-IDF VS Code扩展版本：2.1.0
-- ESP-IDF框架版本：
-- ESP-IDF路径：
+- ESP-IDF版本：5.5.4
+- ESP-IDF路径：C:\esp\v5.5.4\esp-idf
+- IDF_TOOLS_PATH：C:\Espressif\tools
+- IDF_PYTHON_ENV_PATH：C:\Espressif\tools\python\v5.5.4\venv
+- 环境激活脚本：C:\Espressif\tools\Microsoft.v5.5.4.PowerShell_profile.ps1
+- ESP-IDF VS Code插件扩展版本：2.2.0
+- ESP-IDF内置CMake版本：3.30.2
+- ESP-IDF内置Ninja版本：1.12.1
+- ESP32-S3交叉编译器：xtensa-esp-elf GCC 14.2.0
+- ESP-IDF目标：esp32s3
+- ESP32工程路径：.\firmware\esp32_gateway
+- 升级UART实例和GPIO：UART1，TX=GPIO17，RX=GPIO18；GPIO17连接STM32 PA10，GPIO18连接STM32 PA9，两板共地
+
+工具链验证命令：
+
+```powershell
+. 'C:\Espressif\tools\Microsoft.v5.5.4.PowerShell_profile.ps1'
+
+idf.py --version
+python --version
+cmake --version
+ninja --version
+
+$env:IDF_PATH
+$env:IDF_TOOLS_PATH
+```
 
 ## 测试设备
 
@@ -93,3 +116,8 @@
 - RS485收发器：未购买
 - CAN收发器：未购买
 - 第二块STM32：未购买
+
+## 其他补充
+经确认，本机环境下调试的COM口如下：
+- stm32 usbTTLcom口：COM3
+- esp32调试com口：COM5

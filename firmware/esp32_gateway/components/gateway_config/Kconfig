@@ -1,0 +1,43 @@
+menu "Gateway Configuration"
+
+    config GATEWAY_UPGRADE_UART_NUM
+        int "STM32 upgrade UART controller"
+        range 1 2
+        default 1
+        help
+            UART0 is intentionally reserved for the ESP32 console. Select
+            UART1 or UART2 for the STM32 binary upgrade protocol.
+
+    config GATEWAY_UPGRADE_UART_TX_GPIO
+        int "STM32 upgrade UART TX GPIO (-1 disables UART)"
+        range -1 48
+        default 17
+        help
+            The current ESP32-S3-WROOM-1-N16R8 development board exposes
+            GPIO17 as a free pin. Connect it to STM32 USART1 RX (PA10).
+
+    config GATEWAY_UPGRADE_UART_RX_GPIO
+        int "STM32 upgrade UART RX GPIO (-1 disables UART)"
+        range -1 48
+        default 18
+        help
+            The current ESP32-S3-WROOM-1-N16R8 development board exposes
+            GPIO18 as a free pin. Connect it to STM32 USART1 TX (PA9).
+
+    config GATEWAY_CONSOLE_ENABLE
+        bool "Enable local M7 upgrade console"
+        default y
+        help
+            Register the 'firmware' and 'upgrade' commands on the ESP-IDF
+            primary console. Upgrade execution still requires an explicit
+            'upgrade start' command and never starts automatically at boot.
+
+    config GATEWAY_RELIABILITY_TEST
+        bool "Enable destructive M7 reliability fault injection"
+        default n
+        help
+            Build test-only, one-shot fault injection hooks and register the
+            'test fault' console command. Keep this disabled in production
+            firmware. Reliability tests repeatedly erase the STM32 APP area.
+
+endmenu

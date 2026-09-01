@@ -24,7 +24,7 @@
 #endif
 
 #ifndef UPGRADE_APPLICATION_VERSION
-#define UPGRADE_APPLICATION_VERSION       1UL
+#define UPGRADE_APPLICATION_VERSION       2UL
 #endif
 
 #define UPGRADE_BOOT_WAIT_MS              500UL

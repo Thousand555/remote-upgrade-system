@@ -90,7 +90,10 @@ boot_metadata_status_t boot_metadata_get_free_record_count(
 /*
  * Call this before START while the latest state is safe. It compacts only when
  * fewer than required_free_records erased slots remain. During an active
- * update it returns BOOT_METADATA_UNSAFE_STATE instead of erasing Sector 4.
+ * write/verify operation it returns BOOT_METADATA_UNSAFE_STATE instead of
+ * erasing Sector 4. PENDING_BOOT is safe because the image is already fully
+ * verified; compaction preserves that latest record before APP requests the
+ * next update.
  */
 boot_metadata_status_t boot_metadata_compact_if_needed(
     uint32_t required_free_records);

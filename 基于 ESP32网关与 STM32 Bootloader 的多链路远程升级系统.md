@@ -2490,7 +2490,11 @@ Flash写入时间
 
 严格按以下顺序：
 
-截至2026-08-29：M0～M6已完成。M3 APP Flash和M4 Metadata Journal通过板上自测；M5/M6协议测试通过；Bootloader和APP正式目标均为0 Error、0 Warning。M6已通过完整升级、CRC32校验、故障注入、断点续传、错误镜像恢复及连续10次升级稳定性验证。下一阶段进入M7，实现ESP32 UART本地主机。归档见`docs/m6_verification.md`和`docs/m6_test_evidence.md`。
+截至2026-09-01：M0～M6已完成；M7 ESP32 UART本地主机的主功能闭环以及R01～R06、
+R08、R10～R15可靠性用例已通过，正常升级稳定性为10/10。R07本地坏包拦截、R09双端
+冷启动10轮和测试后生产版回归按计划暂缓，因此M7当前为“阶段性归档”，尚未关闭完整
+可靠性验收。权威归档见`docs/m7_archive_summary.md`、`docs/m7_archive_manifest.md`和
+`docs/m7_reliability_verification.md`。下一功能里程碑仍为M8 PC服务器。
 
 ```
 M0：建立仓库和设计文档
