@@ -20,3 +20,16 @@ if ($null -ne $python) {
 if ($LASTEXITCODE -ne 0) {
     throw "M6 Python protocol tests failed with exit code $LASTEXITCODE"
 }
+
+$serverTests = Join-Path $repositoryRoot "server\tests"
+if (Test-Path $serverTests) {
+    if ($null -ne $python) {
+        & $python.Source -m unittest discover -s $serverTests -p "test_*.py" -v
+    } else {
+        & $launcher.Source -3 -m unittest discover -s $serverTests -p "test_*.py" -v
+    }
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "M8 server tests failed with exit code $LASTEXITCODE"
+    }
+}

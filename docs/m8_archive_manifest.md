@@ -1,0 +1,39 @@
+# M8归档文件清单与SHA-256
+
+本清单生成于2026-09-01，并在M9阶段归档前按当前提交候选文件重新复核。M9为服务端
+增加了仅测试时启用的分块延时，并为发布工具增加了大包填充能力，因此下方关键源码哈希
+是合并M8/M9后的最终值。`build/`及所有`.bin`文件受Git忽略；归档、迁移或交付时必须
+保留发布Manifest、缓存包和实测下载文件，并在目标位置重新计算SHA-256。
+
+## 发布物与本机证据
+
+| 文件 | 长度（bytes） | SHA-256 |
+| --- | ---: | --- |
+| `server/firmware/f407-node-1.2.0/manifest.json` | 797 | `CC0E9CAEFBB6FD2451A189D34BBDB75C915A4BE121F8B6DE056689CE0D841E84` |
+| `server/firmware/f407-node-1.2.0/firmware.bin` | 16988 | `D0F0253A73C6A00FFD988B7AA277FE348ADFBBBCBCF879E20BB0A7819AB697FC` |
+| `build/m8_full.bin` | 16988 | `D0F0253A73C6A00FFD988B7AA277FE348ADFBBBCBCF879E20BB0A7819AB697FC` |
+| `build/m8_range.bin` | 4096 | `E918558E88BE6319E816FDD5AE7E4CF4309A56AA747DCD4DDC995E73800F8644` |
+| `build/m8_full_headers.txt` | 232 | `486D79A2CCA097E94DEC603930460DB5BA3C935CE059CBDB93FE4CCD2D313FE1` |
+| `build/m8_range_headers.txt` | 282 | `626CEDB7DAB718A2AC06FD531B615B8F5C21B507FF2CC51EA34EC03B570DD200` |
+
+## M8关键源码
+
+| 文件 | SHA-256 |
+| --- | --- |
+| `server/app/main.py` | `F5648FE445628C4FDBFDB22531798864BB0F6D87E46F03E6DA30D7CFBA03428E` |
+| `server/app/catalog.py` | `4915EEB25281663EE3FD32D467E72EBDC3C6C4811E9E5207BC3A0AABA8103683` |
+| `server/app/range_requests.py` | `D8BAC220AC29529A69B4D4028D4AB77FE6FCAB3D9EDB9FF95F371CD1D16C8A28` |
+| `tools/pack_firmware.py` | `3792F1C7AECF64947232FCC662F7AFD112EEBFF8739EEBE8E70ADB0BB0D52A86` |
+| `tools/test_pack_firmware.py` | `66672F5C25F4221D805ECDF26DC161B61BF25650A1D6909184689EDE49DD2A4C` |
+| `server/tests/test_api.py` | `5A05045EC04AECADB2058B82F61BD226BD96B780A6343F96394EDD114EE376EB` |
+| `server/tests/test_catalog.py` | `F7EEE7D7E8B97D24FE8FC10A602BA09778BFFB8BF9F43FA2ACD057A1D4092EA0` |
+| `server/tests/test_range_requests.py` | `DE8B8D4BAB93B79D23204C8F62784BE682DF8A847ED3125BA7D7B635B8CEEC00` |
+
+## 复核命令
+
+```powershell
+Get-FileHash -Algorithm SHA256 <文件路径>
+```
+
+`build/m8_full.bin`与发布目录中的`firmware.bin`必须具有相同Hash；`m8_range.bin`只
+对应发布包的`4096～8191`字节区间，不能替代完整包保存。

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "firmware_id": "f407-node-1.2.0",
+  "product_id": 1,
+  "hardware_id": 1,
+  "firmware_version": "1.2.0",
+  "firmware_version_code": 2,
+  "app_base": "0x08020000",
+  "image_size": 12892,
+  "crc32": "CF885C9E",
+  "sha256": "69D6E29DD187706496B4B90FDC2B1F7CBB67FD898273A9B65E1397B765F835AE",
+  "package_format": 1,
+  "package_header_size": 128,
+  "package_image_offset": 4096,
+  "package_size": 16988,
+  "package_crc32": "E19DD503",
+  "package_sha256": "D0F0253A73C6A00FFD988B7AA277FE348ADFBBBCBCF879E20BB0A7819AB697FC",
+  "download_url": "/api/v1/firmwares/f407-node-1.2.0/binary",
+  "created_at": "2026-09-01T08:32:05.626155Z",
+  "source": {
+    "git_commit": "1cf527e0c3caa907697a1cbbbed5a28cc5c4290f",
+    "input_filename": "stm32_app.bin"
+  }
+}
