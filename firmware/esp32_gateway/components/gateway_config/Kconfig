@@ -32,6 +32,38 @@ menu "Gateway Configuration"
             primary console. Upgrade execution still requires an explicit
             'upgrade start' command and never starts automatically at boot.
 
+    config GATEWAY_WIFI_SSID
+        string "Fallback Wi-Fi station SSID"
+        default ""
+        help
+            Optional compile-time fallback. The recommended path is the
+            runtime 'wifi configure' console command, which stores a profile
+            in NVS. Do not commit real credentials to sdkconfig.defaults.
+
+    config GATEWAY_WIFI_PASSWORD
+        string "Fallback Wi-Fi station password"
+        default ""
+        help
+            Optional compile-time fallback used only when NVS has no runtime
+            network profile.
+
+    config GATEWAY_FIRMWARE_SERVER_URL
+        string "Fallback M8 firmware server base URL"
+        default ""
+        help
+            Optional compile-time fallback used only when NVS has no runtime
+            network profile. 127.0.0.1 refers to the ESP32 itself.
+
+    config GATEWAY_WIFI_CONNECT_TIMEOUT_MS
+        int "Wi-Fi connection wait timeout (ms)"
+        range 1000 120000
+        default 15000
+
+    config GATEWAY_FIRMWARE_HTTP_TIMEOUT_MS
+        int "M9 HTTP request timeout (ms)"
+        range 1000 120000
+        default 15000
+
     config GATEWAY_RELIABILITY_TEST
         bool "Enable destructive M7 reliability fault injection"
         default n

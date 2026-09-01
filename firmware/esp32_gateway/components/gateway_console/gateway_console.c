@@ -6,8 +6,10 @@
 #include <string.h>
 
 #include "esp_console.h"
+#include "firmware_downloader.h"
 #include "firmware_store.h"
 #include "gateway_log.h"
+#include "gateway_wifi.h"
 #include "upgrade_manager.h"
 
 #if CONFIG_GATEWAY_RELIABILITY_TEST
@@ -155,15 +157,131 @@ static int gateway_console_test_command(int argc, char **argv)
 }
 #endif
 
+static bool gateway_console_upgrade_is_active(void)
+{
+    gateway_upgrade_state_t state = upgrade_manager_state();
+
+    return (state != GW_UPG_IDLE) && (state != GW_UPG_SUCCESS) &&
+           (state != GW_UPG_FAILED);
+}
+
+static void gateway_console_print_download_status(void)
+{
+    gateway_firmware_download_progress_t progress;
+    esp_err_t status = firmware_downloader_get_progress(&progress);
+
+    if (status != ESP_OK) {
+        printf("Firmware downloader unavailable: %s\n", esp_err_to_name(status));
+        return;
+    }
+    printf("State: %s\n", firmware_downloader_state_name(progress.state));
+    printf("Firmware ID: %s\n",
+           (progress.firmware_id[0] != '\0') ? progress.firmware_id : "(none)");
+    printf("Progress: %" PRIu32 "/%" PRIu32 " bytes\n",
+           progress.received_size, progress.package_size);
+    printf("Resume checkpoint: %s\n", progress.can_resume ? "available" : "none");
+    printf("Last result: %s\n", esp_err_to_name(progress.last_error));
+}
+
+static void gateway_console_print_wifi_status(void)
+{
+    gateway_wifi_status_t wifi_status;
+    esp_err_t status = gateway_wifi_get_status(&wifi_status);
+
+    if (status != ESP_OK) {
+        printf("Wi-Fi manager unavailable: %s\n", esp_err_to_name(status));
+        return;
+    }
+    printf("Configured: %s\n", wifi_status.configured ? "yes" : "no");
+    printf("Connection: %s\n", wifi_status.connected ? "connected" : "disconnected");
+    printf("SSID: %s\n", wifi_status.configured ? wifi_status.ssid : "(none)");
+    printf("M8 server: %s\n",
+           wifi_status.configured ? wifi_status.server_url : "(none)");
+}
+
+static int gateway_console_wifi_command(int argc, char **argv)
+{
+    const char *password;
+    esp_err_t status;
+
+    if ((argc == 2) && (strcmp(argv[1], "status") == 0)) {
+        gateway_console_print_wifi_status();
+        return 0;
+    }
+    if ((argc == 2) && (strcmp(argv[1], "clear") == 0)) {
+        if (firmware_downloader_is_active()) {
+            printf("Cannot clear network configuration while a download is active.\n");
+            return 1;
+        }
+        status = gateway_wifi_clear();
+        if (status != ESP_OK) {
+            printf("Network configuration clear failed: %s\n",
+                   esp_err_to_name(status));
+            return 1;
+        }
+        printf("Network configuration cleared.\n");
+        return 0;
+    }
+    if ((argc == 5) && (strcmp(argv[1], "configure") == 0)) {
+        if (firmware_downloader_is_active()) {
+            printf("Cannot reconfigure Wi-Fi while a download is active.\n");
+            return 1;
+        }
+        password = (strcmp(argv[3], "-") == 0) ? "" : argv[3];
+        status = gateway_wifi_configure(argv[2], password, argv[4]);
+        if (status != ESP_OK) {
+            printf("Network configuration failed: %s\n",
+                   esp_err_to_name(status));
+            return 1;
+        }
+        printf("Network profile saved; connection is starting. Use 'wifi status' to check it.\n");
+        return 0;
+    }
+
+    printf("Usage:\n");
+    printf("  wifi status\n");
+    printf("  wifi configure <ssid> <password|-> <server_url>\n");
+    printf("  wifi clear\n");
+    return 1;
+}
+
 static int gateway_console_firmware_command(int argc, char **argv)
 {
     const gateway_firmware_manifest_t *manifest;
     esp_err_t status;
 
-    if ((argc != 2) ||
-        ((strcmp(argv[1], "info") != 0) &&
-         (strcmp(argv[1], "validate") != 0))) {
-        printf("Usage: firmware <info|validate>\n");
+    if ((argc == 3) && (strcmp(argv[1], "download") == 0) &&
+        (strcmp(argv[2], "status") == 0)) {
+        gateway_console_print_download_status();
+        return 0;
+    }
+    if ((argc == 3) && (strcmp(argv[1], "download") == 0) &&
+        (strcmp(argv[2], "cancel") == 0)) {
+        status = firmware_downloader_cancel();
+        if (status != ESP_OK) {
+            printf("Download cancel failed: %s\n", esp_err_to_name(status));
+            return 1;
+        }
+        printf("Download cancellation requested.\n");
+        return 0;
+    }
+    if ((argc == 3) && (strcmp(argv[1], "download") == 0)) {
+        if (gateway_console_upgrade_is_active()) {
+            printf("Cannot replace stm_fw while a local upgrade task is active.\n");
+            return 1;
+        }
+        status = firmware_downloader_start(argv[2]);
+        if (status != ESP_OK) {
+            printf("Download request rejected: %s. Configure Wi-Fi and M8 server URL first.\n",
+                   esp_err_to_name(status));
+            return 1;
+        }
+        printf("Download accepted. Use 'firmware download status' to inspect progress.\n");
+        return 0;
+    }
+    if ((argc != 2) || ((strcmp(argv[1], "info") != 0) &&
+                        (strcmp(argv[1], "validate") != 0))) {
+        printf("Usage: firmware <info|validate|download <firmware_id|status|cancel>>\n");
         return 1;
     }
 
@@ -251,6 +369,10 @@ static int gateway_console_upgrade_command(int argc, char **argv)
         return 0;
     }
     if (strcmp(argv[1], "start") == 0) {
+        if (firmware_downloader_is_active()) {
+            printf("Cannot start STM32 upgrade while an M9 download is active.\n");
+            return 1;
+        }
         status = upgrade_manager_start();
     } else {
         status = upgrade_manager_abort();
@@ -268,8 +390,8 @@ esp_err_t gateway_console_init(void)
 {
     const esp_console_cmd_t firmware_command = {
         .command = "firmware",
-        .help = "Inspect or validate the local STM32 package",
-        .hint = "<info|validate>",
+        .help = "Inspect local package or control M9 HTTP download",
+        .hint = "<info|validate|download <firmware_id|status|cancel>>",
         .func = &gateway_console_firmware_command,
         .argtable = NULL,
     };
@@ -278,6 +400,13 @@ esp_err_t gateway_console_init(void)
         .help = "Control the M7 local UART upgrade",
         .hint = "<probe|start|status|abort>",
         .func = &gateway_console_upgrade_command,
+        .argtable = NULL,
+    };
+    const esp_console_cmd_t wifi_command = {
+        .command = "wifi",
+        .help = "Configure Wi-Fi and the M8 server at runtime",
+        .hint = "<status|configure <ssid> <password|-> <server_url>|clear>",
+        .func = &gateway_console_wifi_command,
         .argtable = NULL,
     };
 #if CONFIG_GATEWAY_RELIABILITY_TEST
@@ -293,13 +422,17 @@ esp_err_t gateway_console_init(void)
     esp_err_t status;
 
     repl_config.prompt = "gateway>";
-    repl_config.max_cmdline_length = 128;
+    repl_config.max_cmdline_length = 320;
 
     status = esp_console_register_help_command();
     if (status != ESP_OK) {
         return status;
     }
     status = esp_console_cmd_register(&firmware_command);
+    if (status != ESP_OK) {
+        return status;
+    }
+    status = esp_console_cmd_register(&wifi_command);
     if (status != ESP_OK) {
         return status;
     }
@@ -340,7 +473,7 @@ esp_err_t gateway_console_init(void)
     status = esp_console_start_repl(s_repl);
     if (status == ESP_OK) {
         GW_LOGI(TAG,
-                "Console ready: firmware <info|validate>, upgrade <probe|start|status|abort>");
+                "Console ready: wifi <status|configure|clear>, firmware <info|validate|download>, upgrade <probe|start|status|abort>");
     }
     return status;
 }

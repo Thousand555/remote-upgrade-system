@@ -35,6 +35,20 @@ esp_err_t firmware_store_validate(void);
 esp_err_t firmware_store_read(uint32_t image_offset,
                               void *buffer,
                               size_t length);
+/*
+ * M9 download staging API. The cache is erased by begin(), data is written at
+ * package offsets, and the package valid marker remains erased until commit().
+ * Callers must verify package authenticity before commit().
+ */
+esp_err_t firmware_store_download_begin(uint32_t package_size);
+esp_err_t firmware_store_download_resume(uint32_t package_size);
+esp_err_t firmware_store_download_write(uint32_t package_offset,
+                                        const void *buffer,
+                                        size_t length);
+esp_err_t firmware_store_download_read(uint32_t package_offset,
+                                       void *buffer,
+                                       size_t length);
+esp_err_t firmware_store_download_commit(void);
 bool firmware_store_is_ready(void);
 const gateway_firmware_manifest_t *firmware_store_manifest(void);
 const esp_partition_t *firmware_store_partition(void);

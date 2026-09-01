@@ -2493,8 +2493,15 @@ Flash写入时间
 截至2026-09-01：M0～M6已完成；M7 ESP32 UART本地主机的主功能闭环以及R01～R06、
 R08、R10～R15可靠性用例已通过，正常升级稳定性为10/10。R07本地坏包拦截、R09双端
 冷启动10轮和测试后生产版回归按计划暂缓，因此M7当前为“阶段性归档”，尚未关闭完整
-可靠性验收。权威归档见`docs/m7_archive_summary.md`、`docs/m7_archive_manifest.md`和
-`docs/m7_reliability_verification.md`。下一功能里程碑仍为M8 PC服务器。
+可靠性验收。M8已完成本地PC只读HTTP固件服务器、可追溯Manifest、与M7兼容的缓存包
+发布工具以及Range/ETag下载接口的自动化和本机验收；归档见`docs/m8_verification.md`
+和`docs/m8_archive_manifest.md`。M9 ESP32网络下载的核心链路已阶段性完成：Wi-Fi/HTTP下载、
+完整包安全提交、ESP32复位与用户取消后的断点续传，以及正式基线到STM32的端到端升级回归
+均已通过目标板验收；ETag变化和错误Manifest身份拦截保留为`DEFERRED`，不阻塞后续阶段开发。
+M7归档见`docs/m7_archive_summary.md`、`docs/m7_archive_manifest.md`和
+`docs/m7_reliability_verification.md`，M9设计见`docs/m9_download_design.md`，实现状态与板上验收见
+`docs/m9_implementation.md`，阶段归档见`docs/m9_archive_summary.md`和
+`docs/m9_archive_manifest.md`。
 
 ```
 M0：建立仓库和设计文档

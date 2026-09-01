@@ -8,12 +8,14 @@
 #include "esp_log.h"
 #include "esp_psram.h"
 #include "esp_system.h"
+#include "firmware_downloader.h"
 #include "firmware_store.h"
 #include "gateway_config.h"
 #include "gateway_console.h"
 #include "nvs_flash.h"
 #include "transport_uart.h"
 #include "upgrade_manager.h"
+#include "gateway_wifi.h"
 
 static const char *TAG = "gateway";
 
@@ -82,7 +84,7 @@ void app_main(void)
     const esp_partition_t *firmware_partition;
     esp_err_t status;
 
-    ESP_LOGI(TAG, "ESP32 gateway M7 initialization starting");
+    ESP_LOGI(TAG, "ESP32 gateway M9 initialization starting");
     log_hardware_info();
 
     status = init_nvs();
@@ -124,6 +126,20 @@ void app_main(void)
         return;
     }
 
+    status = gateway_wifi_init();
+    if (status != ESP_OK) {
+        ESP_LOGW(TAG,
+                 "Wi-Fi initialization failed; M9 download is unavailable: %s",
+                 esp_err_to_name(status));
+    }
+
+    status = firmware_downloader_init();
+    if (status != ESP_OK) {
+        ESP_LOGE(TAG, "Firmware downloader initialization failed: %s",
+                 esp_err_to_name(status));
+        return;
+    }
+
 #if CONFIG_GATEWAY_CONSOLE_ENABLE
     status = gateway_console_init();
     if (status != ESP_OK) {
@@ -133,5 +149,6 @@ void app_main(void)
     }
 #endif
 
-    ESP_LOGI(TAG, "M7 gateway ready; upgrades require an explicit console command");
+    ESP_LOGI(TAG,
+             "M9 gateway ready; downloads and STM32 upgrades both require explicit console commands");
 }

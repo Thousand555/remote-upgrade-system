@@ -39,3 +39,17 @@
 
 自动化原始日志和生成报告位于仓库根目录`build/`。该目录被Git忽略；需要长期保存或
 移交时，应连同文件复制并按[`m7_archive_manifest.md`](m7_archive_manifest.md)复核哈希。
+
+## M8 PC固件服务器
+
+- [`m8_server.md`](m8_server.md)：发布包格式、HTTP API、Range/ETag断点下载契约和M8验收出口。
+- [`m8_verification.md`](m8_verification.md)：M8自动化与本机HTTP实测记录。
+- [`m8_archive_manifest.md`](m8_archive_manifest.md)：M8发布物、下载证据和关键源码SHA-256。
+
+## M9 ESP32网络下载
+
+- [`m9_download_design.md`](m9_download_design.md)：M9缓存写入、延迟有效标记、NVS检查点与Range/ETag续传设计。
+- [`m9_implementation.md`](m9_implementation.md)：已完成的实现范围、配置方式、控制台命令和阶段性验收结论。
+- [`m9_remaining_verification.md`](m9_remaining_verification.md)：大包限速、复位/Cancel续传、STM32回归的PASS证据，以及ETag变化和错误身份拦截的DEFERRED记录。
+- [`m9_archive_summary.md`](m9_archive_summary.md)：M9阶段结论、实现范围、目标板证据、延期项与后续边界。
+- [`m9_archive_manifest.md`](m9_archive_manifest.md)：M9固件、发布物、关键源码与文档SHA-256。
