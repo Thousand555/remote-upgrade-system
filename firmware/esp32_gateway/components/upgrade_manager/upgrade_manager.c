@@ -57,6 +57,20 @@ static void upgrade_manager_set_remote(const upgrade_client_response_t *response
     upgrade_manager_unlock();
 }
 
+static void upgrade_manager_set_remote_info(
+    const upgrade_client_response_t *response,
+    const upgrade_device_info_t *info)
+{
+    upgrade_manager_lock();
+    if (response != NULL) {
+        s_progress.last_device_status = response->status;
+    }
+    if (info != NULL) {
+        s_progress.remote_boot_state = info->boot_state;
+    }
+    upgrade_manager_unlock();
+}
+
 static uint32_t upgrade_manager_random_session(void)
 {
     uint32_t session_id = esp_random();
@@ -147,34 +161,98 @@ static esp_err_t upgrade_manager_wait_for_application(uint32_t firmware_version)
 {
     upgrade_hello_response_t hello;
     upgrade_device_info_t info;
+    upgrade_progress_t remote;
     upgrade_client_response_t response;
     int64_t deadline;
     esp_err_t status;
+    bool pending_logged;
 
     deadline = esp_timer_get_time() +
-               ((int64_t)GATEWAY_DISCOVERY_TIMEOUT_MS * 1000LL);
+               ((int64_t)GATEWAY_APP_CONFIRM_TIMEOUT_MS * 1000LL);
+    pending_logged = false;
     while (esp_timer_get_time() < deadline) {
+        if (upgrade_manager_is_aborted()) {
+            return ESP_ERR_INVALID_STATE;
+        }
+
         status = upgrade_client_hello(&s_client,
                                       GATEWAY_DISCOVERY_REQUEST_TIMEOUT_MS,
                                       1U,
                                       &hello,
                                       &response);
-        if ((status == ESP_OK) && (response.status == UPG_STATUS_OK) &&
-            ((hello.capabilities & GATEWAY_UPGRADE_CAP_BOOTLOADER) == 0U) &&
+        if ((status != ESP_OK) || (response.status != UPG_STATUS_OK)) {
+            vTaskDelay(pdMS_TO_TICKS(100U));
+            continue;
+        }
+        if (hello.max_payload_size != UPGRADE_MAX_PAYLOAD_SIZE) {
+            return ESP_ERR_NOT_SUPPORTED;
+        }
+
+        if (((hello.capabilities & GATEWAY_UPGRADE_CAP_BOOTLOADER) == 0U) &&
             ((hello.capabilities & GATEWAY_UPGRADE_CAP_ENTER_BOOT) != 0U)) {
             status = upgrade_client_get_info(&s_client, &info, &response);
             if ((status != ESP_OK) || (response.status != UPG_STATUS_OK)) {
-                return (status == ESP_OK) ? ESP_ERR_INVALID_RESPONSE : status;
+                vTaskDelay(pdMS_TO_TICKS(100U));
+                continue;
             }
+            upgrade_manager_set_remote_info(&response, &info);
             if ((info.product_id != GATEWAY_STM32_PRODUCT_ID) ||
                 (info.hardware_id != GATEWAY_STM32_HARDWARE_ID) ||
                 (info.application_version != firmware_version)) {
                 return ESP_ERR_INVALID_VERSION;
             }
-            GW_LOGI(TAG,
-                    "STM32 APP connected, version=%lu",
-                    (unsigned long)info.application_version);
-            return ESP_OK;
+            if (info.boot_state == GATEWAY_STM32_BOOT_STATE_CONFIRMED) {
+                GW_LOGI(TAG,
+                        "STM32 APP confirmed, version=%lu",
+                        (unsigned long)info.application_version);
+                return ESP_OK;
+            }
+            if (info.boot_state != GATEWAY_STM32_BOOT_STATE_PENDING_BOOT) {
+                return ESP_ERR_INVALID_STATE;
+            }
+            if (!pending_logged) {
+                GW_LOGI(TAG,
+                        "STM32 APP is healthy but startup confirmation is pending");
+                pending_logged = true;
+            }
+        } else if ((hello.capabilities &
+                    GATEWAY_UPGRADE_CAP_BOOTLOADER) != 0U) {
+            status = upgrade_client_get_info(&s_client, &info, &response);
+            if ((status != ESP_OK) || (response.status != UPG_STATUS_OK)) {
+                vTaskDelay(pdMS_TO_TICKS(100U));
+                continue;
+            }
+            upgrade_manager_set_remote_info(&response, &info);
+            if ((info.product_id != GATEWAY_STM32_PRODUCT_ID) ||
+                (info.hardware_id != GATEWAY_STM32_HARDWARE_ID) ||
+                (info.application_version != firmware_version)) {
+                return ESP_ERR_INVALID_VERSION;
+            }
+            if (info.boot_state == GATEWAY_STM32_BOOT_STATE_FAILED) {
+                status = upgrade_client_query_progress(
+                    &s_client,
+                    GATEWAY_NORMAL_REQUEST_TIMEOUT_MS,
+                    GATEWAY_MAX_RETRY_COUNT,
+                    &remote,
+                    &response);
+                if ((status != ESP_OK) ||
+                    ((response.status != UPG_STATUS_OK) &&
+                     (response.status != UPG_STATUS_BUSY))) {
+                    return (status == ESP_OK) ?
+                           ESP_ERR_INVALID_RESPONSE : status;
+                }
+                upgrade_manager_set_remote(&response, &remote);
+                if (remote.error_code <= (uint32_t)UPG_STATUS_TIMEOUT) {
+                    upgrade_manager_lock();
+                    s_progress.last_device_status =
+                        (upgrade_status_t)remote.error_code;
+                    upgrade_manager_unlock();
+                }
+                GW_LOGE(TAG,
+                        "STM32 APP was not confirmed; Bootloader entered recovery, error=%lu",
+                        (unsigned long)remote.error_code);
+                return ESP_ERR_INVALID_STATE;
+            }
         }
         vTaskDelay(pdMS_TO_TICKS(100U));
     }
@@ -409,10 +487,10 @@ static void upgrade_manager_finish(esp_err_t status,
     upgrade_manager_unlock();
 
     if (status == ESP_OK) {
-        GW_LOGI(TAG, "M7 local UART upgrade completed successfully");
+        GW_LOGI(TAG, "M11 confirmed UART upgrade completed successfully");
     } else {
         GW_LOGE(TAG,
-                "M7 upgrade failed: %s, device_status=%u",
+                "M11 upgrade failed: %s, device_status=%u",
                 esp_err_to_name(status),
                 (unsigned int)device_status);
     }

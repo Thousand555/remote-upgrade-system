@@ -227,26 +227,50 @@ int main(void)
 		{
 			if ((metadata_allows_boot != 0U) && (app_is_valid != 0U))
 			{
-				uint32_t wait_started_at;
-
-				wait_started_at = HAL_GetTick();
-				while (((HAL_GetTick() - wait_started_at) <
-				        UPGRADE_BOOT_WAIT_MS) &&
-				       (!boot_upgrade_has_activity()))
+				/*
+				 * Never let gateway discovery pin an unconfirmed image in the
+				 * Bootloader recovery window. PENDING_BOOT gets its bounded
+				 * attempt immediately; confirmed images keep the normal window.
+				 */
+				if (boot_upgrade_application_is_pending())
 				{
-					boot_upgrade_poll();
+					if (boot_upgrade_prepare_application_boot())
+					{
+						Boot_JumpToApp();
+					}
+					metadata_allows_boot = 0U;
 				}
-
-				if (!boot_upgrade_has_activity())
+				else
 				{
-					Boot_JumpToApp();
+					uint32_t wait_started_at;
+
+					wait_started_at = HAL_GetTick();
+					while (((HAL_GetTick() - wait_started_at) <
+					        UPGRADE_BOOT_WAIT_MS) &&
+					       (!boot_upgrade_has_activity()))
+					{
+						boot_upgrade_poll();
+					}
+
+					if (!boot_upgrade_has_activity())
+					{
+						if (boot_upgrade_prepare_application_boot())
+						{
+							Boot_JumpToApp();
+						}
+						metadata_allows_boot = 0U;
+					}
 				}
 			}
 		}
 		else if ((metadata_allows_boot != 0U) && (app_is_valid != 0U))
 		{
 			/* A transport failure must not brick an otherwise valid APP. */
-			Boot_JumpToApp();
+			if (boot_upgrade_prepare_application_boot())
+			{
+				Boot_JumpToApp();
+			}
+			metadata_allows_boot = 0U;
 		}
 #endif
 

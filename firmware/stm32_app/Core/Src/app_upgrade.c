@@ -9,8 +9,24 @@
 #include "upgrade_protocol.h"
 
 #define APP_UPGRADE_MAX_REQUIRED_RECORDS  232UL
+#define APP_IWDG_START_KEY                 0xCCCCU
+#define APP_IWDG_WRITE_ACCESS_KEY          0x5555U
+#define APP_IWDG_RELOAD_KEY                0xAAAAU
+#define APP_IWDG_PRESCALER_DIV64           4U
+#define APP_IWDG_RELOAD_VALUE              2999U
+
+typedef enum
+{
+    APP_CONFIRM_NOT_REQUIRED = 0,
+    APP_CONFIRM_WAITING,
+    APP_CONFIRM_COMPLETE,
+    APP_CONFIRM_BLOCKED
+} app_confirmation_state_t;
 
 static bool s_reset_after_response;
+static bool s_watchdog_started;
+static uint32_t s_confirmation_started_at;
+static app_confirmation_state_t s_confirmation_state;
 
 /* Shared single-thread workspaces; keeping these off the 1 KiB startup stack
  * prevents the first complete RTU frame from corrupting the APP stack. */
@@ -19,6 +35,62 @@ static uint8_t s_response_adu[MODBUS_RTU_MAX_ADU_SIZE];
 static modbus_rtu_frame_t s_rtu_frame;
 static upgrade_message_t s_request;
 static upgrade_message_t s_response;
+
+static void app_upgrade_watchdog_reload(void)
+{
+    if (s_watchdog_started)
+    {
+        IWDG->KR = APP_IWDG_RELOAD_KEY;
+    }
+}
+
+static bool app_upgrade_pending_record_is_compatible(
+    const boot_metadata_record_t *record)
+{
+    return (record != NULL) &&
+           (record->state == (uint16_t)BOOT_STATE_PENDING_BOOT) &&
+           (record->session_id != 0U) &&
+           (record->firmware_version == UPGRADE_APPLICATION_VERSION) &&
+           (record->image_size != 0U) &&
+           (record->received_bytes == record->image_size);
+}
+
+static boot_metadata_status_t app_upgrade_confirm_pending_image(void)
+{
+    boot_metadata_record_t desired;
+    boot_metadata_record_t latest;
+    boot_metadata_status_t status;
+
+    status = boot_metadata_load_latest(&latest);
+    if (status != BOOT_METADATA_OK)
+    {
+        return status;
+    }
+    if (!app_upgrade_pending_record_is_compatible(&latest))
+    {
+        return BOOT_METADATA_UNSAFE_STATE;
+    }
+
+    desired = latest;
+    desired.state = (uint16_t)BOOT_STATE_CONFIRMED;
+    desired.error_code = 0U;
+    return boot_metadata_append(&desired, NULL);
+}
+
+void app_upgrade_watchdog_start(void)
+{
+    /* Nominal timeout: 3000 * 64 / 32 kHz = 6 seconds. */
+    IWDG->KR = APP_IWDG_START_KEY;
+    IWDG->KR = APP_IWDG_WRITE_ACCESS_KEY;
+    IWDG->PR = APP_IWDG_PRESCALER_DIV64;
+    IWDG->RLR = APP_IWDG_RELOAD_VALUE;
+    while (IWDG->SR != 0U)
+    {
+        /* A configuration fault deliberately ends in a watchdog reset. */
+    }
+    IWDG->KR = APP_IWDG_RELOAD_KEY;
+    s_watchdog_started = true;
+}
 
 static bool app_upgrade_request_is_empty(const upgrade_message_t *request)
 {
@@ -147,16 +219,72 @@ static upgrade_status_t app_upgrade_dispatch(
 
 bool app_upgrade_init(void)
 {
+    boot_metadata_record_t latest;
+    boot_metadata_status_t metadata_status;
+    bool transport_ready;
+
     s_reset_after_response = false;
-    return uart_rtu_transport_init();
+    s_confirmation_started_at = HAL_GetTick();
+    s_confirmation_state = APP_CONFIRM_NOT_REQUIRED;
+
+    transport_ready = uart_rtu_transport_init();
+    metadata_status = boot_metadata_load_latest(&latest);
+    if (!transport_ready)
+    {
+        s_confirmation_state = APP_CONFIRM_BLOCKED;
+    }
+    else if ((metadata_status == BOOT_METADATA_OK) &&
+             (latest.state == (uint16_t)BOOT_STATE_PENDING_BOOT))
+    {
+        s_confirmation_state =
+            app_upgrade_pending_record_is_compatible(&latest) ?
+            APP_CONFIRM_WAITING : APP_CONFIRM_BLOCKED;
+    }
+
+    return transport_ready &&
+           (s_confirmation_state != APP_CONFIRM_BLOCKED);
 }
 
 void app_upgrade_poll(void)
 {
+    boot_metadata_status_t confirmation_status;
     size_t request_length;
     size_t response_length;
     uint8_t address;
     upgrade_status_t status;
+
+    if (s_confirmation_state == APP_CONFIRM_BLOCKED)
+    {
+        /* Do not feed the watchdog: this boot must count as unconfirmed. */
+        return;
+    }
+
+#if UPGRADE_APP_TEST_WATCHDOG_RESET
+    if (s_confirmation_state == APP_CONFIRM_WAITING)
+    {
+        /* Test build: emulate an APP hang before startup confirmation. */
+        return;
+    }
+#endif
+
+    app_upgrade_watchdog_reload();
+
+    if ((s_confirmation_state == APP_CONFIRM_WAITING) &&
+        ((HAL_GetTick() - s_confirmation_started_at) >=
+         UPGRADE_APP_CONFIRM_DELAY_MS))
+    {
+        confirmation_status = app_upgrade_confirm_pending_image();
+        if (confirmation_status == BOOT_METADATA_OK)
+        {
+            s_confirmation_state = APP_CONFIRM_COMPLETE;
+        }
+        else
+        {
+            /* A failed or invalid confirmation must enter recovery. */
+            s_confirmation_state = APP_CONFIRM_BLOCKED;
+            return;
+        }
+    }
 
     if (!uart_rtu_transport_receive(s_request_adu,
                                     sizeof(s_request_adu),

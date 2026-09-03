@@ -34,7 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define APP_VERSION        "0.1.0"
+#define APP_VERSION        "1.3.0"
 #define APP_BASE_ADDR      0x08020000UL
 
 #ifndef LOG_ENABLE
@@ -86,6 +86,9 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+#if !LOG_ENABLE
+  app_upgrade_watchdog_start();
+#endif
 
   /* USER CODE END Init */
 

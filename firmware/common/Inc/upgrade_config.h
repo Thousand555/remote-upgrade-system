@@ -24,12 +24,33 @@
 #endif
 
 #ifndef UPGRADE_APPLICATION_VERSION
-#define UPGRADE_APPLICATION_VERSION       2UL
+#define UPGRADE_APPLICATION_VERSION       3UL
 #endif
 
 #define UPGRADE_BOOT_WAIT_MS              500UL
 #define UPGRADE_UART_TX_TIMEOUT_MS        1000UL
 #define UPGRADE_METADATA_CHECKPOINT_SIZE  4096UL
+
+/*
+ * M11 boot confirmation policy. A freshly written APP must keep its main
+ * loop and upgrade UART service alive for this interval before it confirms
+ * the PENDING_BOOT record. The Bootloader permits three unconfirmed starts;
+ * the next reset moves the device to FAILED recovery mode.
+ */
+#define UPGRADE_APP_CONFIRM_DELAY_MS       3000UL
+#define UPGRADE_PENDING_BOOT_MAX_ATTEMPTS  3UL
+
+/*
+ * Test-only M11 fault injection. Override to 1 in an APP build to stop
+ * servicing the watchdog while PENDING_BOOT. Production builds keep zero.
+ */
+#ifndef UPGRADE_APP_TEST_WATCHDOG_RESET
+#define UPGRADE_APP_TEST_WATCHDOG_RESET    0U
+#endif
+
+#if UPGRADE_APP_TEST_WATCHDOG_RESET > 1U
+#error "UPGRADE_APP_TEST_WATCHDOG_RESET must be 0 or 1"
+#endif
 
 #define UPGRADE_CAP_BOOTLOADER             0x0001U
 #define UPGRADE_CAP_ENTER_BOOT             0x0002U

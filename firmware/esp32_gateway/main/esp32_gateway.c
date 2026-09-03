@@ -84,7 +84,7 @@ void app_main(void)
     const esp_partition_t *firmware_partition;
     esp_err_t status;
 
-    ESP_LOGI(TAG, "ESP32 gateway M10 initialization starting");
+    ESP_LOGI(TAG, "ESP32 gateway M11 initialization starting");
     log_hardware_info();
 
     status = init_nvs();
@@ -150,5 +150,5 @@ void app_main(void)
 #endif
 
     ESP_LOGI(TAG,
-             "M10 gateway ready; HTTPS downloads and STM32 upgrades both require explicit console commands");
+             "M11 gateway ready; upgrade success now requires STM32 APP confirmation");
 }

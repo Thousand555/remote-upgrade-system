@@ -60,3 +60,11 @@
 - [`m10_verification.md`](m10_verification.md)：开发证书、HTTPS服务、ESP32烧录、下载和STM32回归的目标板验收步骤。
 - [`m10_archive_summary.md`](m10_archive_summary.md)：M10阶段结论、目标板证据、安全边界和M11交接入口。
 - [`m10_archive_manifest.md`](m10_archive_manifest.md)：M10固件、证书、关键源码和文档SHA-256。
+
+## M11 APP启动确认与异常恢复
+
+- [`m11_implementation.md`](m11_implementation.md)：确认状态机、看门狗、启动次数、ESP32成功判据和单APP恢复边界。
+- [`m11_verification.md`](m11_verification.md)：版本3正向升级、确认前复位、`FAILED/13`和缓存重刷的目标板步骤。
+- [`m11_test_evidence.md`](m11_test_evidence.md)：目标板正常确认、未确认失败、缓存恢复和确认持久化证据。
+- [`m11_archive_summary.md`](m11_archive_summary.md)：M11阶段结论、验收结果、边界和M12交接入口。
+- [`m11_archive_manifest.md`](m11_archive_manifest.md)：M11固件、发布物、关键源码和文档SHA-256。

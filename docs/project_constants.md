@@ -39,8 +39,12 @@
 | Modbus节点地址 | `1` |
 | 产品ID / 硬件ID | `0x0001` / `0x0001`，产品定型时必须替换 |
 | Bootloader版本 | `0x00010000` |
-| APP固件版本 | 单调递增`uint32_t`，`0`非法；M6暂不阻止降级 |
+| APP固件版本 | 当前为`3`（显示版本`1.3.0`）；单调递增`uint32_t`，`0`非法；当前暂不阻止降级 |
 | Bootloader恢复窗口 | 500 ms；有效APP且无协议请求时自动跳转 |
+| APP启动确认延时 | 3000 ms；等待期内保持升级UART服务可用 |
+| APP独立看门狗 | 名义6 s；IWDG时钟受LSI误差影响 |
+| 待确认启动上限 | 3次；第4次Bootloader启动转入`FAILED`恢复态 |
+| ESP等待APP确认上限 | 45 s；仅`CONFIRMED(7)`判升级成功 |
 | 普通请求超时 / 重试 | 1000 ms / 5次 |
 | 擦除总超时 / 查询间隔 | 60 s / 100 ms |
 | 镜像CRC32 | IEEE reflected，poly `0xEDB88320`、init/xorout `0xFFFFFFFF`，兼容Python `binascii.crc32()` |
@@ -81,10 +85,13 @@ Modbus RTU ADU最大为256字节。升级请求在功能码后的Data字段中�
 | Record大小 | 76 bytes，固定且4字节对齐 |
 | Record容量 | 862条，末尾保留24 bytes不用 |
 | Record校验 | IEEE CRC32，覆盖`magic`至`error_code` |
-| 整理安全状态 | `EMPTY`、`APP_VALID`、`CONFIRMED` |
+| 整理安全状态 | `EMPTY`、`APP_VALID`、`PENDING_BOOT`、`CONFIRMED` |
 | Metadata自测 | `BOOT_METADATA_SELF_TEST_ENABLE=0`为默认；设为1会擦除Sector 4 |
 
 Metadata追加先写Payload和CRC，最后写Commit marker。扫描只接受magic、版本、字段范围、CRC和Commit marker全部有效的记录；断电留下的半条记录会被跳过。启动新升级前必须按镜像大小预留足够的检查点记录，不能等到`RECEIVING`过程中才擦除Sector 4。
+
+M11不改变Metadata格式。`PENDING_BOOT`时`error_code`表示已启动次数0～3；超过上限转入
+`FAILED`并记录`UPG_STATUS_TIMEOUT(13)`。APP确认后追加`CONFIRMED`并清零该字段。
 
 ## STM32构建模式
 

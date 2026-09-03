@@ -25,6 +25,8 @@ static boot_metadata_record_t s_record;
 static bool s_has_record;
 static bool s_metadata_corrupt;
 static bool s_activity;
+static bool s_boot_decision_made;
+static bool s_boot_decision_allows_app;
 static boot_deferred_action_t s_deferred_action;
 
 /*
@@ -663,6 +665,8 @@ bool boot_upgrade_init(void)
     s_has_record = false;
     s_metadata_corrupt = false;
     s_activity = false;
+    s_boot_decision_made = false;
+    s_boot_decision_allows_app = false;
     s_deferred_action = BOOT_DEFER_NONE;
 
     metadata_status = boot_metadata_load_latest(&s_record);
@@ -682,6 +686,58 @@ bool boot_upgrade_init(void)
     }
 
     return uart_rtu_transport_init();
+}
+
+bool boot_upgrade_application_is_pending(void)
+{
+    return (!s_metadata_corrupt) && s_has_record &&
+           (boot_upgrade_state() == BOOT_STATE_PENDING_BOOT);
+}
+
+bool boot_upgrade_prepare_application_boot(void)
+{
+    boot_state_t state;
+
+    if (s_boot_decision_made)
+    {
+        return s_boot_decision_allows_app;
+    }
+
+    s_boot_decision_made = true;
+    state = boot_upgrade_state();
+
+    /* Preserve the pre-M11 vector fallback when only Metadata is corrupt. */
+    if (s_metadata_corrupt)
+    {
+        s_boot_decision_allows_app = true;
+        return true;
+    }
+
+    if (state == BOOT_STATE_PENDING_BOOT)
+    {
+        if (s_record.error_code >= UPGRADE_PENDING_BOOT_MAX_ATTEMPTS)
+        {
+            (void)boot_upgrade_append_state(BOOT_STATE_FAILED,
+                                            UPG_STATUS_TIMEOUT);
+            return false;
+        }
+
+        if (boot_upgrade_append_state(
+                BOOT_STATE_PENDING_BOOT,
+                s_record.error_code + 1U) != UPG_STATUS_OK)
+        {
+            return false;
+        }
+
+        s_boot_decision_allows_app = true;
+        return true;
+    }
+
+    s_boot_decision_allows_app =
+        (state == BOOT_STATE_EMPTY) ||
+        (state == BOOT_STATE_APP_VALID) ||
+        (state == BOOT_STATE_CONFIRMED);
+    return s_boot_decision_allows_app;
 }
 
 void boot_upgrade_poll(void)

@@ -10,6 +10,11 @@ downloads to HTTPS, validates the server certificate against an embedded
 development CA, synchronizes wall-clock time through SNTP before certificate
 validation, and keeps the M9 SHA-256/CRC32/valid-marker checks.
 
+M11 waits for the STM32 APP to change `PENDING_BOOT` to `CONFIRMED` before an
+upgrade can succeed. Repeated unconfirmed boots end in Bootloader recovery mode;
+the cached package can then be applied again with another explicit
+`upgrade start`.
+
 No upgrade starts automatically. The destructive STM32 operations require an
 explicit `upgrade start` console command.
 
@@ -71,7 +76,7 @@ must match `UPGRADE_APPLICATION_VERSION` compiled into that APP.
 py -3 .\tools\firmware_package.py `
   --input .\firmware\stm32_app\MDK-ARM\stm32_app\stm32_app.bin `
   --output .\build\stm32_m7_package.bin `
-  --version 1
+  --version 3
 ```
 
 Then load the package into the named custom partition:
@@ -89,7 +94,7 @@ The package has a 128-byte manifest, an erased padding area, and the raw image
 at partition offset `0x1000`. The gateway validates the manifest and complete
 image CRC32 before contacting the STM32.
 
-## Run M7 from the console
+## Run an upgrade from the console
 
 Open the monitor:
 
@@ -121,7 +126,7 @@ upgrade status
 
 Exit the monitor with `Ctrl+]`. A complete run passes through `DISCOVER`,
 `ENTER_BOOT`, `GET_INFO`, `START`, `ERASE`, `TRANSFER`, `VERIFY`, `ACTIVATE`,
-`WAIT_APP`, and finally `SUCCESS`.
+`WAIT_APP`, waits for remote boot state 7, and finally reaches `SUCCESS`.
 
 ## Reliability test build
 
