@@ -84,7 +84,7 @@ void app_main(void)
     const esp_partition_t *firmware_partition;
     esp_err_t status;
 
-    ESP_LOGI(TAG, "ESP32 gateway M9 initialization starting");
+    ESP_LOGI(TAG, "ESP32 gateway M10 initialization starting");
     log_hardware_info();
 
     status = init_nvs();
@@ -129,7 +129,7 @@ void app_main(void)
     status = gateway_wifi_init();
     if (status != ESP_OK) {
         ESP_LOGW(TAG,
-                 "Wi-Fi initialization failed; M9 download is unavailable: %s",
+                 "Wi-Fi initialization failed; network download is unavailable: %s",
                  esp_err_to_name(status));
     }
 
@@ -150,5 +150,5 @@ void app_main(void)
 #endif
 
     ESP_LOGI(TAG,
-             "M9 gateway ready; downloads and STM32 upgrades both require explicit console commands");
+             "M10 gateway ready; HTTPS downloads and STM32 upgrades both require explicit console commands");
 }

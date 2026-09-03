@@ -2503,6 +2503,12 @@ M7归档见`docs/m7_archive_summary.md`、`docs/m7_archive_manifest.md`和
 `docs/m9_implementation.md`，阶段归档见`docs/m9_archive_summary.md`和
 `docs/m9_archive_manifest.md`。
 
+M10最小闭环已完成并于2026-09-02归档：ESP32默认拒绝HTTP，联网后先通过SNTP同步证书校验所需时间，
+再使用内嵌开发CA完成HTTPS服务器证书与主机名/IP校验；PC端受信HTTPS、Range/If-Range和错误信任链拒绝已通过，ESP-IDF独立构建
+、ESP32目标板HTTPS正式包下载与缓存校验、HTTPS下载后的UART端到端升级和APP回探均已通过；错误CA在TLS阶段被拒绝且旧缓存保持有效。
+M10阶段状态为`PHASE COMPLETE`。实现、板测与归档入口分别见`docs/m10_implementation.md`、
+`docs/m10_verification.md`与`docs/m10_archive_summary.md`。
+
 ```
 M0：建立仓库和设计文档
 

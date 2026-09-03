@@ -34,6 +34,7 @@ esp_err_t gateway_wifi_get_server_url(char *buffer, size_t buffer_size);
 bool gateway_wifi_is_configured(void);
 bool gateway_wifi_is_connected(void);
 esp_err_t gateway_wifi_wait_connected(uint32_t timeout_ms);
+esp_err_t gateway_wifi_wait_time_synced(uint32_t timeout_ms);
 
 #ifdef __cplusplus
 }

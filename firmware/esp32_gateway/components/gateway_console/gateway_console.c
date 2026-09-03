@@ -370,7 +370,7 @@ static int gateway_console_upgrade_command(int argc, char **argv)
     }
     if (strcmp(argv[1], "start") == 0) {
         if (firmware_downloader_is_active()) {
-            printf("Cannot start STM32 upgrade while an M9 download is active.\n");
+            printf("Cannot start STM32 upgrade while a package download is active.\n");
             return 1;
         }
         status = upgrade_manager_start();
@@ -390,7 +390,7 @@ esp_err_t gateway_console_init(void)
 {
     const esp_console_cmd_t firmware_command = {
         .command = "firmware",
-        .help = "Inspect local package or control M9 HTTP download",
+        .help = "Inspect local package or control M10 HTTPS download",
         .hint = "<info|validate|download <firmware_id|status|cancel>>",
         .func = &gateway_console_firmware_command,
         .argtable = NULL,

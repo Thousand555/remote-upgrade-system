@@ -60,9 +60,29 @@ menu "Gateway Configuration"
         default 15000
 
     config GATEWAY_FIRMWARE_HTTP_TIMEOUT_MS
-        int "M9 HTTP request timeout (ms)"
+        int "M10 HTTP/HTTPS request timeout (ms)"
         range 1000 120000
         default 15000
+
+    config GATEWAY_SNTP_SERVER
+        string "M10 SNTP server used before certificate validation"
+        default "pool.ntp.org"
+        help
+            ESP32 has no trusted wall clock after a cold boot. HTTPS downloads
+            wait for SNTP before validating certificate validity dates.
+
+    config GATEWAY_TIME_SYNC_TIMEOUT_MS
+        int "M10 wall-clock synchronization timeout (ms)"
+        range 1000 120000
+        default 20000
+
+    config GATEWAY_ALLOW_INSECURE_HTTP
+        bool "Allow insecure HTTP firmware downloads"
+        default n
+        help
+            Development compatibility switch. Keep this disabled for M10
+            acceptance and production-like builds so firmware metadata and
+            binaries are only fetched over authenticated HTTPS.
 
     config GATEWAY_RELIABILITY_TEST
         bool "Enable destructive M7 reliability fault injection"

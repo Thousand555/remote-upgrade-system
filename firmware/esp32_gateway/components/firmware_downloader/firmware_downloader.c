@@ -58,6 +58,8 @@ typedef struct
 } gateway_http_metadata_t;
 
 static const char *TAG = "firmware_downloader";
+extern const uint8_t m10_ca_pem_start[] asm("_binary_m10_ca_pem_start");
+extern const uint8_t m10_ca_pem_end[] asm("_binary_m10_ca_pem_end");
 static SemaphoreHandle_t s_lock;
 static TaskHandle_t s_task;
 static bool s_cancel_requested;
@@ -101,6 +103,11 @@ static bool firmware_downloader_is_http_server_configured(void)
     char server_url[GATEWAY_FIRMWARE_SERVER_URL_MAX_LENGTH];
 
     return gateway_wifi_get_server_url(server_url, sizeof(server_url)) == ESP_OK;
+}
+
+static bool firmware_downloader_url_is_https(const char *url)
+{
+    return (url != NULL) && (strncmp(url, "https://", 8U) == 0);
 }
 
 static void firmware_downloader_set_state(gateway_firmware_download_state_t state)
@@ -254,6 +261,14 @@ static esp_err_t firmware_downloader_http_open(
     config.buffer_size = GATEWAY_FIRMWARE_DOWNLOAD_CHUNK_SIZE;
     config.event_handler = firmware_downloader_http_event;
     config.user_data = metadata;
+    config.disable_auto_redirect = true;
+    if (firmware_downloader_url_is_https(url)) {
+        config.cert_pem = (const char *)m10_ca_pem_start;
+        config.cert_len = (size_t)(m10_ca_pem_end - m10_ca_pem_start);
+        config.skip_cert_common_name_check = false;
+    } else if (!GATEWAY_ALLOW_INSECURE_HTTP) {
+        return ESP_ERR_INVALID_ARG;
+    }
     client = esp_http_client_init(&config);
     if (client == NULL) {
         return ESP_ERR_NO_MEM;
@@ -854,11 +869,11 @@ static void firmware_downloader_finish(esp_err_t status)
     firmware_downloader_unlock();
 
     if (final_state == GW_FW_DL_READY) {
-        GW_LOGI(TAG, "M9 package download completed; run 'upgrade start' explicitly to update STM32");
+        GW_LOGI(TAG, "Package download completed; run 'upgrade start' explicitly to update STM32");
     } else if (final_state == GW_FW_DL_CANCELED) {
-        GW_LOGW(TAG, "M9 package download canceled; a checkpoint is available for the same release");
+        GW_LOGW(TAG, "Package download canceled; a checkpoint is available for the same release");
     } else {
-        GW_LOGE(TAG, "M9 package download failed: %s", esp_err_to_name(status));
+        GW_LOGE(TAG, "Package download failed: %s", esp_err_to_name(status));
     }
 }
 
@@ -877,6 +892,15 @@ static void firmware_downloader_task(void *argument)
 
     firmware_downloader_set_state(GW_FW_DL_WAIT_WIFI);
     status = gateway_wifi_wait_connected(GATEWAY_WIFI_CONNECT_TIMEOUT_MS);
+    if (status != ESP_OK) {
+        goto finished;
+    }
+    if (firmware_downloader_cancel_requested()) {
+        status = ESP_ERR_INVALID_STATE;
+        goto finished;
+    }
+    firmware_downloader_set_state(GW_FW_DL_WAIT_TIME);
+    status = gateway_wifi_wait_time_synced(GATEWAY_TIME_SYNC_TIMEOUT_MS);
     if (status != ESP_OK) {
         goto finished;
     }
@@ -1089,6 +1113,7 @@ const char *firmware_downloader_state_name(
     switch (state) {
         case GW_FW_DL_IDLE: return "IDLE";
         case GW_FW_DL_WAIT_WIFI: return "WAIT_WIFI";
+        case GW_FW_DL_WAIT_TIME: return "WAIT_TIME";
         case GW_FW_DL_FETCH_MANIFEST: return "FETCH_MANIFEST";
         case GW_FW_DL_VALIDATE_MANIFEST: return "VALIDATE_MANIFEST";
         case GW_FW_DL_PREPARE: return "PREPARE";

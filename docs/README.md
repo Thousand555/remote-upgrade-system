@@ -53,3 +53,10 @@
 - [`m9_remaining_verification.md`](m9_remaining_verification.md)：大包限速、复位/Cancel续传、STM32回归的PASS证据，以及ETag变化和错误身份拦截的DEFERRED记录。
 - [`m9_archive_summary.md`](m9_archive_summary.md)：M9阶段结论、实现范围、目标板证据、延期项与后续边界。
 - [`m9_archive_manifest.md`](m9_archive_manifest.md)：M9固件、发布物、关键源码与文档SHA-256。
+
+## M10 HTTPS可信下载
+
+- [`m10_implementation.md`](m10_implementation.md)：HTTPS信任模型、已实现范围、证书生命周期和当前软件验证结论。
+- [`m10_verification.md`](m10_verification.md)：开发证书、HTTPS服务、ESP32烧录、下载和STM32回归的目标板验收步骤。
+- [`m10_archive_summary.md`](m10_archive_summary.md)：M10阶段结论、目标板证据、安全边界和M11交接入口。
+- [`m10_archive_manifest.md`](m10_archive_manifest.md)：M10固件、证书、关键源码和文档SHA-256。

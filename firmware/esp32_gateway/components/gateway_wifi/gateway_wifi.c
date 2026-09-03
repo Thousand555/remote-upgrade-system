@@ -2,9 +2,11 @@
 
 #include <ctype.h>
 #include <string.h>
+#include <time.h>
 
 #include "esp_event.h"
 #include "esp_netif.h"
+#include "esp_netif_sntp.h"
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -40,20 +42,30 @@ static bool gateway_wifi_string_is_terminated(const char *text, size_t capacity)
 
 static bool gateway_wifi_server_url_is_valid(const char *server_url)
 {
+    const char *authority;
     size_t length;
+    size_t scheme_length;
 
     if (server_url == NULL) {
         return false;
     }
     length = strlen(server_url);
-    if ((length <= strlen("http://")) ||
-        (length >= GATEWAY_FIRMWARE_SERVER_URL_MAX_LENGTH) ||
-        (strncmp(server_url, "http://", 7U) != 0)) {
+    if (strncmp(server_url, "https://", 8U) == 0) {
+        scheme_length = 8U;
+    } else if (GATEWAY_ALLOW_INSECURE_HTTP &&
+               (strncmp(server_url, "http://", 7U) == 0)) {
+        scheme_length = 7U;
+    } else {
         return false;
     }
-    if ((strncmp(server_url + 7U, "127.", 4U) == 0) ||
-        (strncmp(server_url + 7U, "0.0.0.0", 7U) == 0) ||
-        (strncmp(server_url + 7U, "localhost", 9U) == 0)) {
+    if ((length <= scheme_length) ||
+        (length >= GATEWAY_FIRMWARE_SERVER_URL_MAX_LENGTH)) {
+        return false;
+    }
+    authority = server_url + scheme_length;
+    if ((strncmp(authority, "127.", 4U) == 0) ||
+        (strncmp(authority, "0.0.0.0", 7U) == 0) ||
+        (strncmp(authority, "localhost", 9U) == 0)) {
         return false;
     }
     return true;
@@ -179,6 +191,8 @@ static void gateway_wifi_event_handler(void *argument,
 
 static esp_err_t gateway_wifi_initialize_stack(void)
 {
+    esp_sntp_config_t sntp_config =
+        ESP_NETIF_SNTP_DEFAULT_CONFIG(CONFIG_GATEWAY_SNTP_SERVER);
     wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
     esp_err_t status;
 
@@ -208,10 +222,14 @@ static esp_err_t gateway_wifi_initialize_stack(void)
     if (status != ESP_OK) {
         return status;
     }
-    return esp_event_handler_register(IP_EVENT,
-                                      IP_EVENT_STA_GOT_IP,
-                                      &gateway_wifi_event_handler,
-                                      NULL);
+    status = esp_event_handler_register(IP_EVENT,
+                                        IP_EVENT_STA_GOT_IP,
+                                        &gateway_wifi_event_handler,
+                                        NULL);
+    if (status != ESP_OK) {
+        return status;
+    }
+    return esp_netif_sntp_init(&sntp_config);
 }
 
 static esp_err_t gateway_wifi_apply_profile(void)
@@ -434,4 +452,28 @@ esp_err_t gateway_wifi_wait_connected(uint32_t timeout_ms)
                                pdTRUE,
                                pdMS_TO_TICKS(timeout_ms));
     return ((bits & GATEWAY_WIFI_CONNECTED_BIT) != 0U) ? ESP_OK : ESP_ERR_TIMEOUT;
+}
+
+esp_err_t gateway_wifi_wait_time_synced(uint32_t timeout_ms)
+{
+    time_t now;
+    esp_err_t status;
+
+    if (!s_initialized || (timeout_ms == 0U)) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    time(&now);
+    if ((int64_t)now >= GATEWAY_MIN_VALID_UNIX_TIME) {
+        return ESP_OK;
+    }
+    status = esp_netif_sntp_sync_wait(pdMS_TO_TICKS(timeout_ms));
+    if (status != ESP_OK) {
+        return status;
+    }
+    time(&now);
+    if ((int64_t)now < GATEWAY_MIN_VALID_UNIX_TIME) {
+        return ESP_ERR_INVALID_RESPONSE;
+    }
+    GW_LOGI(TAG, "System clock synchronized for HTTPS certificate validation");
+    return ESP_OK;
 }

@@ -35,6 +35,7 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+server/certs/
 
 # Editors and operating system
 .vscode/
@@ -42,3 +43,6 @@ venv/
 .DS_Store
 Thumbs.db
 debug.log
+
+environment.md
+tatus --short

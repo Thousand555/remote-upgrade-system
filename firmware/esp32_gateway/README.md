@@ -5,6 +5,11 @@ the ESP32 a local UART upgrade host: it validates an STM32 package stored in
 the `stm_fw` partition, discovers the STM32 APP/Bootloader, transfers the image,
 verifies it, activates it, and probes the restarted APP.
 
+M9 adds Wi-Fi/HTTP download and resumable cache writes. M10 defaults network
+downloads to HTTPS, validates the server certificate against an embedded
+development CA, synchronizes wall-clock time through SNTP before certificate
+validation, and keeps the M9 SHA-256/CRC32/valid-marker checks.
+
 No upgrade starts automatically. The destructive STM32 operations require an
 explicit `upgrade start` console command.
 
@@ -36,6 +41,26 @@ idf.py -p COMx flash
 ```
 
 Replace `COMx` with the ESP32 board port.
+
+## Run the M10 HTTPS development server
+
+Generate a development CA and a server certificate for the current WLAN IPv4,
+then start the existing firmware API with TLS:
+
+```powershell
+Set-Location C:\Users\baimin\Desktop\remote_upgrade_system_v1.0
+.\tools\setup_m10_tls.ps1 -ServerIp 192.168.31.170
+.\tools\run_m10_https.ps1
+```
+
+The repository already contains the public development CA for `192.168.31.170`.
+Skip certificate generation while that address and CA remain unchanged.
+Private keys stay under the Git-ignored `server/certs/` directory. The public
+CA is embedded into the ESP32 image, so rotating the CA requires rebuilding and
+flashing the gateway. See `docs/m10_verification.md` for the complete board
+procedure and use an HTTPS URL in `wifi configure`. The download task enters
+`WAIT_TIME` after Wi-Fi connects and fails closed if SNTP cannot provide a valid
+clock within the configured timeout.
 
 ## Build and load the local STM32 package
 
