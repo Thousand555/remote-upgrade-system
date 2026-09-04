@@ -37,6 +37,10 @@ venv/
 .pytest_cache/
 server/certs/
 
+# Local Bootloader learning materials
+docs/bootloader_course/
+docs/bootloader_handbook/
+
 # Editors and operating system
 .vscode/
 .idea/
