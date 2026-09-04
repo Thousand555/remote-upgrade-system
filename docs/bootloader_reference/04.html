@@ -1,0 +1,387 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>第4章 链接脚本深入</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e9f0 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        /* 双边框设计：外边框 + 内阴影 */
+        .double-border {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #f1c40f;
+            border-radius: 24px;
+            box-shadow: 0 20px 30px -15px rgba(0,0,0,0.2), inset 0 1px 0 0 #fff8e0;
+            overflow: hidden;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+        }
+        .sidebar {
+            background: #fefcf5;
+            border-right: 2px solid #fdebb3;
+            padding: 24px 16px;
+        }
+        .sidebar h3 {
+            font-size: 1.4rem;
+            color: #b45f06;
+            border-left: 5px solid #f39c12;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+        .chapter-list {
+            list-style: none;
+        }
+        .chapter-list li {
+            margin-bottom: 6px;
+        }
+        .chapter-list a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #2c3e50;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .chapter-list a:hover {
+            background: #fdebd0;
+            transform: translateX(3px);
+        }
+        .chapter-list .active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 5px rgba(59,130,246,0.3);
+        }
+        .main-content {
+            padding: 30px 35px;
+            background: white;
+        }
+        .footer-nav {
+            margin-top: 45px;
+            padding-top: 20px;
+            border-top: 2px solid #f0e6d2;
+            display: flex;
+            justify-content: space-between;
+        }
+        .footer-nav a {
+            padding: 8px 24px;
+            background: #f1f5f9;
+            text-decoration: none;
+            color: #1e40af;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .footer-nav a:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #64748b;
+            border-top: 1px dashed #e2e8f0;
+            font-size: 0.9rem;
+        }
+        h2 { color: #1e3a8a; border-left: 6px solid #f59e0b; padding-left: 15px; margin: 20px 0 15px; }
+        h3 { color: #2c3e50; margin: 20px 0 10px; }
+        pre {
+            background: #2d2f36; color: #f8f8f2; padding: 15px; border-radius: 12px;
+            overflow-x: auto; font-family: 'JetBrains Mono', monospace; margin: 15px 0;
+        }
+        table {
+            width: 100%; border-collapse: collapse; margin: 15px 0; background: #fefce8;
+        }
+        th, td {
+            border: 1px solid #fcd34d; padding: 10px; text-align: left;
+        }
+        th { background: #fffbeb; }
+        .tip, .warning, .highlight {
+            padding: 12px 18px; border-radius: 16px; margin: 15px 0;
+        }
+        .tip { background: #e0f2fe; border-left: 6px solid #0ea5e9; }
+        .warning { background: #fee2e2; border-left: 6px solid #ef4444; }
+        .highlight { background: #fef9c3; border: 1px solid #facc15; }
+    </style>
+</head>
+<body>
+<div class="double-border">
+<div class="container">
+    <div class="sidebar">
+        <h3>📚 课程目录</h3>
+        <ul class="chapter-list">
+            <li><a href="01.html" class="">第1章 Bootloader入门</a></li>
+<li><a href="02.html" class="">第2章 嵌入式系统基础</a></li>
+<li><a href="03.html" class="">第3章 开发环境搭建</a></li>
+<li><a href="04.html" class="active">第4章 链接脚本深入</a></li>
+<li><a href="05.html" class="">第5章 启动代码分析</a></li>
+<li><a href="06.html" class="">第6章 中断向量表重映射</a></li>
+<li><a href="07.html" class="">第7章 Flash驱动开发</a></li>
+<li><a href="08.html" class="">第8章 串口通信协议</a></li>
+<li><a href="09.html" class="">第9章 固件包格式设计</a></li>
+<li><a href="10.html" class="">第10章 固件下载流程</a></li>
+<li><a href="11.html" class="">第11章 固件校验与完整性检查</a></li>
+<li><a href="12.html" class="">第12章 固件烧录与跳转</a></li>
+<li><a href="13.html" class="">第13章 双备份启动策略</a></li>
+<li><a href="14.html" class="">第14章 看门狗与异常处理</a></li>
+<li><a href="15.html" class="">第15章 固件加密与安全启动</a></li>
+<li><a href="16.html" class="">第16章 OTA升级原理</a></li>
+<li><a href="17.html" class="">第17章 Bootloader与APP交互</a></li>
+<li><a href="18.html" class="">第18章 多分区管理</a></li>
+<li><a href="19.html" class="">第19章 命令行接口(CLI)开发</a></li>
+<li><a href="20.html" class="">第20章 日志系统设计</a></li>
+<li><a href="21.html" class="">第21章 性能优化</a></li>
+<li><a href="22.html" class="">第22章 低功耗模式</a></li>
+<li><a href="23.html" class="">第23章 外设驱动封装</a></li>
+<li><a href="24.html" class="">第24章 单元测试与模拟</a></li>
+<li><a href="25.html" class="">第25章 硬件调试技巧</a></li>
+<li><a href="26.html" class="">第26章 常见问题排查</a></li>
+<li><a href="27.html" class="">第27章 RTOS集成</a></li>
+<li><a href="28.html" class="">第28章 量产烧录方案</a></li>
+<li><a href="29.html" class="">第29章 安全防护</a></li>
+<li><a href="30.html" class="">第30章 项目实战</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <h2>4. 链接脚本深入：链接脚本语法解析、ROM与RAM布局设计、Section的分配与对齐</h2>
+
+<p>好，咱们今天来啃一块硬骨头——链接脚本。说实话，我刚入行那会儿，看到链接脚本就头疼。一堆花括号、星号、点号，感觉像天书。但后来我发现，这东西其实就是一张「地图」，告诉编译器你的代码和数据该往哪儿放。</p>
+
+<p>你想想看，嵌入式系统里，ROM（Flash）和RAM是两码事。代码通常放在ROM里，上电就能跑。变量呢？得放在RAM里，因为要读写。链接脚本就是干这个的——把不同的段（Section）分配到正确的地方。</p>
+
+<h3>4.1 链接脚本语法解析</h3>
+
+<p>先看一个最简的链接脚本长什么样。我习惯从实际例子入手，这样好理解。</p>
+
+<pre><code>ENTRY(Reset_Handler)
+
+MEMORY
+{
+    FLASH (rx)  : ORIGIN = 0x08000000, LENGTH = 512K
+    RAM   (rwx) : ORIGIN = 0x20000000, LENGTH = 128K
+}
+
+SECTIONS
+{
+    .text :
+    {
+        *(.isr_vector)
+        *(.text)
+        *(.text.*)
+        *(.rodata)
+        . = ALIGN(4);
+        _etext = .;
+    } &gt; FLASH
+
+    .data :
+    {
+        _sdata = .;
+        *(.data)
+        *(.data.*)
+        . = ALIGN(4);
+        _edata = .;
+    } &gt; RAM AT&gt; FLASH
+
+    .bss :
+    {
+        _sbss = .;
+        *(.bss)
+        *(.bss.*)
+        *(COMMON)
+        . = ALIGN(4);
+        _ebss = .;
+    } &gt; RAM
+}
+</code></pre>
+
+<p>嗯，看着是不是有点眼熟了？咱们一行行拆开讲。</p>
+
+<p><strong>ENTRY()</strong> 定义了程序入口点。说白了就是告诉CPU：上电后第一条指令在哪儿。我见过有人忘了写这个，结果程序跑飞了，查了半天才发现是入口没指定。</p>
+
+<p><strong>MEMORY</strong> 块定义了两块物理存储区域。FLASH从0x08000000开始，大小512KB，属性是rx（可读可执行）。RAM从0x20000000开始，大小128KB，属性是rwx（可读可写可执行）。</p>
+
+<p>这里有个细节：属性里的x表示能否执行代码。有些MCU的RAM也能执行代码，但大部分情况下，我们只在RAM里放数据，所以写成rw就够了。</p>
+
+<p><strong>SECTIONS</strong> 块是核心。它描述了每个段怎么分配。</p>
+
+<div class="highlight">
+<p><strong>关键点：</strong>链接脚本里的「点号（.）」代表当前地址计数器。你可以把它理解成一个指针，指向当前正在分配的位置。</p>
+</div>
+
+<h3>4.2 ROM与RAM布局设计</h3>
+
+<p>ROM和RAM的布局，说白了就是回答两个问题：</p>
+<ul>
+    <li>代码放哪儿？—— 通常放ROM</li>
+    <li>变量放哪儿？—— 通常放RAM</li>
+</ul>
+
+<p>但事情没那么简单。你想想看，全局变量初始值怎么办？它们在ROM里有个「镜像」，上电后要拷贝到RAM里。这就是.data段的处理逻辑。</p>
+
+<p>我在项目中遇到过一个问题：有个同事把一个大数组定义成全局变量，没初始化。结果程序跑起来后，数组里的值全是乱的。为什么？因为.bss段在启动代码里被清零了，但.data段需要从ROM拷贝初始值。他那个数组没初始化，属于.bss段，但启动代码没处理好，导致数据混乱。</p>
+
+<p>典型的ROM/RAM布局如下：</p>
+
+<table>
+    <tr>
+        <th>段名</th>
+        <th>存储位置</th>
+        <th>运行位置</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>.isr_vector</td>
+        <td>ROM起始</td>
+        <td>ROM</td>
+        <td>中断向量表，必须从0地址开始</td>
+    </tr>
+    <tr>
+        <td>.text</td>
+        <td>ROM</td>
+        <td>ROM</td>
+        <td>代码和只读数据</td>
+    </tr>
+    <tr>
+        <td>.rodata</td>
+        <td>ROM</td>
+        <td>ROM</td>
+        <td>常量字符串、const变量</td>
+    </tr>
+    <tr>
+        <td>.data</td>
+        <td>ROM（镜像）</td>
+        <td>RAM</td>
+        <td>已初始化全局变量</td>
+    </tr>
+    <tr>
+        <td>.bss</td>
+        <td>无</td>
+        <td>RAM</td>
+        <td>未初始化全局变量</td>
+    </tr>
+    <tr>
+        <td>堆/栈</td>
+        <td>无</td>
+        <td>RAM末尾</td>
+        <td>动态分配和函数调用</td>
+    </tr>
+</table>
+
+<p>注意看.data段那一行：它在ROM里有个「镜像」，但运行时在RAM里。这就是为什么链接脚本里写的是 <code>&gt; RAM AT&gt; FLASH</code>。意思是：运行时在RAM，但加载地址在FLASH。</p>
+
+<div class="tip">
+<p><strong>小技巧：</strong>启动代码里一定要有从ROM拷贝.data到RAM的循环，以及清零.bss段的循环。我见过有人忘了写这个，结果全局变量初始值全丢了。</p>
+</div>
+
+<h3>4.3 Section的分配与对齐</h3>
+
+<p>Section分配，说白了就是把不同的代码和数据归类，放到不同的段里。对齐呢？就是让数据在内存里按2的幂次方地址存放。</p>
+
+<p>为什么要对齐？因为CPU访问对齐的数据更快。有些ARM内核甚至不支持非对齐访问，一访问就触发异常。嗯，这里要注意：</p>
+
+<ul>
+    <li>4字节对齐：地址末尾两位是00</li>
+    <li>8字节对齐：地址末尾三位是000</li>
+    <li>16字节对齐：地址末尾四位是0000</li>
+</ul>
+
+<p>链接脚本里用 <code>. = ALIGN(4)</code> 来强制对齐。这行代码的意思是：把当前地址向上取整到4的倍数。</p>
+
+<p>举个例子：假设当前地址是0x20000003，执行 <code>. = ALIGN(4)</code> 后，地址变成0x20000004。跳过了3个字节。</p>
+
+<p>我曾经踩过一个坑：有个结构体里定义了uint8_t和uint32_t混排的成员，没加__packed属性。结果结构体大小比预期多了3个字节，因为编译器自动填充了对齐空隙。后来我在链接脚本里加了对齐检查，才发现了问题。</p>
+
+<p>再看一个更复杂的例子——自定义段：</p>
+
+<pre><code>.my_custom_section :
+{
+    . = ALIGN(4);
+    _smy_custom = .;
+    *(.my_custom_section)
+    *(.my_custom_section.*)
+    . = ALIGN(4);
+    _emy_custom = .;
+} &gt; RAM
+</code></pre>
+
+<p>这个段有什么用？比如你想把一些关键数据放在RAM的特定区域，方便调试或者DMA访问。在C代码里这样声明：</p>
+
+<pre><code>__attribute__((section(".my_custom_section"))) 
+uint32_t critical_buffer[1024];
+</code></pre>
+
+<p>这样，critical_buffer就被放到了你指定的位置。我经常用这个技巧来管理DMA缓冲区，确保它们不会和其他变量混在一起。</p>
+
+<div class="warning">
+<p><strong>警告：</strong>自定义段的名字不要和系统保留段（如.text、.data、.bss）重名。否则链接器会报错，或者更糟——静默覆盖。</p>
+</div>
+
+<h3>4.4 链接脚本中的符号导出</h3>
+
+<p>链接脚本里定义的符号，比如 <code>_sdata</code>、<code>_edata</code>，可以在C代码里直接引用。怎么用？用extern声明：</p>
+
+<pre><code>extern uint32_t _sdata;
+extern uint32_t _edata;
+extern uint32_t _sbss;
+extern uint32_t _ebss;
+
+void startup_copy_data(void)
+{
+    uint32_t *src = &amp;_sdata;  // 注意：这里取的是地址
+    uint32_t *dst = ...;      // RAM目标地址
+    uint32_t len = &amp;_edata - &amp;_sdata;
+    // 执行拷贝...
+}
+</code></pre>
+
+<p>这里有个容易搞混的地方：链接脚本里定义的符号，在C代码里取地址时，得到的是链接脚本里那个位置的值。说白了，<code>&amp;_sdata</code> 就是.data段在ROM里的起始地址。</p>
+
+<p>我刚开始学的时候，总搞不清这个。后来想通了：链接脚本里的符号，本质上就是一个地址常量。你在C代码里用extern声明它，然后取它的地址，就得到了那个地址值。</p>
+
+<h3>4.5 实际项目中的布局策略</h3>
+
+<p>在实际项目中，ROM和RAM的布局要考虑很多因素。我总结了几条经验：</p>
+
+<ol>
+    <li><strong>中断向量表必须放在ROM起始地址</strong>。这是硬件规定的，没得商量。</li>
+    <li><strong>代码段尽量紧凑</strong>。ROM空间有限，别浪费。可以用 <code>-Os</code> 优化选项。</li>
+    <li><strong>RAM分区管理</strong>。把.data、.bss、堆、栈分开，避免互相覆盖。</li>
+    <li><strong>栈大小要留余量</strong>。我一般给栈分配RAM的1/4，再根据实际调试调整。</li>
+    <li><strong>考虑OTA升级</strong>。如果要做远程升级，ROM里要预留两个Bank，一个跑当前程序，一个存升级包。</li>
+</ol>
+
+<p>举个例子，一个支持OTA的布局可能是这样的：</p>
+
+<pre><code>MEMORY
+{
+    FLASH_BANK1 (rx)  : ORIGIN = 0x08000000, LENGTH = 256K
+    FLASH_BANK2 (rx)  : ORIGIN = 0x08040000, LENGTH = 256K
+    RAM         (rwx) : ORIGIN = 0x20000000, LENGTH = 128K
+}
+</code></pre>
+
+<p>这样，Bank1跑程序，Bank2存升级包。切换时只需要修改中断向量表的偏移量就行。</p>
+
+<p>好了，链接脚本这块儿咱们就聊到这儿。说白了，它就是一张地图，告诉编译器你的代码和数据该去哪儿。多写几遍，多踩几个坑，自然就熟了。下一章咱们聊聊启动代码，看看上电后第一条指令到底干了什么。</p>
+        <div class="footer-nav">
+            <a href="03.html">← 上一章</a>
+            <a href="index.html">📖 返回目录</a>
+            <a href="05.html">下一章 →</a>
+        </div>
+        <footer>公众号:蓝海资料掘金营，微信deep3321</footer>
+    </div>
+</div>
+</div>
+</body>
+</html>

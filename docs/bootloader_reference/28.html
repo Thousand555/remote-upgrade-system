@@ -1,0 +1,349 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>第28章 量产烧录方案</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e9f0 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        /* 双边框设计：外边框 + 内阴影 */
+        .double-border {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #f1c40f;
+            border-radius: 24px;
+            box-shadow: 0 20px 30px -15px rgba(0,0,0,0.2), inset 0 1px 0 0 #fff8e0;
+            overflow: hidden;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+        }
+        .sidebar {
+            background: #fefcf5;
+            border-right: 2px solid #fdebb3;
+            padding: 24px 16px;
+        }
+        .sidebar h3 {
+            font-size: 1.4rem;
+            color: #b45f06;
+            border-left: 5px solid #f39c12;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+        .chapter-list {
+            list-style: none;
+        }
+        .chapter-list li {
+            margin-bottom: 6px;
+        }
+        .chapter-list a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #2c3e50;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .chapter-list a:hover {
+            background: #fdebd0;
+            transform: translateX(3px);
+        }
+        .chapter-list .active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 5px rgba(59,130,246,0.3);
+        }
+        .main-content {
+            padding: 30px 35px;
+            background: white;
+        }
+        .footer-nav {
+            margin-top: 45px;
+            padding-top: 20px;
+            border-top: 2px solid #f0e6d2;
+            display: flex;
+            justify-content: space-between;
+        }
+        .footer-nav a {
+            padding: 8px 24px;
+            background: #f1f5f9;
+            text-decoration: none;
+            color: #1e40af;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .footer-nav a:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #64748b;
+            border-top: 1px dashed #e2e8f0;
+            font-size: 0.9rem;
+        }
+        h2 { color: #1e3a8a; border-left: 6px solid #f59e0b; padding-left: 15px; margin: 20px 0 15px; }
+        h3 { color: #2c3e50; margin: 20px 0 10px; }
+        pre {
+            background: #2d2f36; color: #f8f8f2; padding: 15px; border-radius: 12px;
+            overflow-x: auto; font-family: 'JetBrains Mono', monospace; margin: 15px 0;
+        }
+        table {
+            width: 100%; border-collapse: collapse; margin: 15px 0; background: #fefce8;
+        }
+        th, td {
+            border: 1px solid #fcd34d; padding: 10px; text-align: left;
+        }
+        th { background: #fffbeb; }
+        .tip, .warning, .highlight {
+            padding: 12px 18px; border-radius: 16px; margin: 15px 0;
+        }
+        .tip { background: #e0f2fe; border-left: 6px solid #0ea5e9; }
+        .warning { background: #fee2e2; border-left: 6px solid #ef4444; }
+        .highlight { background: #fef9c3; border: 1px solid #facc15; }
+    </style>
+</head>
+<body>
+<div class="double-border">
+<div class="container">
+    <div class="sidebar">
+        <h3>📚 课程目录</h3>
+        <ul class="chapter-list">
+            <li><a href="01.html" class="">第1章 Bootloader入门</a></li>
+<li><a href="02.html" class="">第2章 嵌入式系统基础</a></li>
+<li><a href="03.html" class="">第3章 开发环境搭建</a></li>
+<li><a href="04.html" class="">第4章 链接脚本深入</a></li>
+<li><a href="05.html" class="">第5章 启动代码分析</a></li>
+<li><a href="06.html" class="">第6章 中断向量表重映射</a></li>
+<li><a href="07.html" class="">第7章 Flash驱动开发</a></li>
+<li><a href="08.html" class="">第8章 串口通信协议</a></li>
+<li><a href="09.html" class="">第9章 固件包格式设计</a></li>
+<li><a href="10.html" class="">第10章 固件下载流程</a></li>
+<li><a href="11.html" class="">第11章 固件校验与完整性检查</a></li>
+<li><a href="12.html" class="">第12章 固件烧录与跳转</a></li>
+<li><a href="13.html" class="">第13章 双备份启动策略</a></li>
+<li><a href="14.html" class="">第14章 看门狗与异常处理</a></li>
+<li><a href="15.html" class="">第15章 固件加密与安全启动</a></li>
+<li><a href="16.html" class="">第16章 OTA升级原理</a></li>
+<li><a href="17.html" class="">第17章 Bootloader与APP交互</a></li>
+<li><a href="18.html" class="">第18章 多分区管理</a></li>
+<li><a href="19.html" class="">第19章 命令行接口(CLI)开发</a></li>
+<li><a href="20.html" class="">第20章 日志系统设计</a></li>
+<li><a href="21.html" class="">第21章 性能优化</a></li>
+<li><a href="22.html" class="">第22章 低功耗模式</a></li>
+<li><a href="23.html" class="">第23章 外设驱动封装</a></li>
+<li><a href="24.html" class="">第24章 单元测试与模拟</a></li>
+<li><a href="25.html" class="">第25章 硬件调试技巧</a></li>
+<li><a href="26.html" class="">第26章 常见问题排查</a></li>
+<li><a href="27.html" class="">第27章 RTOS集成</a></li>
+<li><a href="28.html" class="active">第28章 量产烧录方案</a></li>
+<li><a href="29.html" class="">第29章 安全防护</a></li>
+<li><a href="30.html" class="">第30章 项目实战</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <h2>第二十八讲：量产烧录方案</h2>
+
+<p>量产烧录，说白了就是工厂里怎么把固件灌进去，还要把序列号、校准参数这些“身份证”信息写对。我见过太多研发样机跑得飞起，一到产线就翻车的案例。嗯，今天咱们就把这块硬骨头啃下来。</p>
+
+<h3>工厂烧录流程设计</h3>
+
+<p>先说说整体流程。我个人习惯把量产烧录分成三个阶段：准备阶段、烧录阶段、验证阶段。</p>
+
+<h4>准备阶段</h4>
+<p>这个阶段主要做三件事：</p>
+<ul>
+  <li><strong>固件打包</strong>：把Bootloader、应用程序、校准参数模板打包成一个镜像文件。我建议用CRC32或SHA256做完整性校验。</li>
+  <li><strong>烧录工具准备</strong>：根据芯片接口选择烧录器。SWD、JTAG、UART是主流。我遇到过用USB批量烧录的，速度确实快，但稳定性要仔细调。</li>
+  <li><strong>工位配置</strong>：每个工位要配好电源、烧录器、夹具。我曾经见过一个产线，因为夹具接触不良，烧录成功率只有70%。后来换了镀金探针，问题就解决了。</li>
+</ul>
+
+<h4>烧录阶段</h4>
+<p>这个阶段是核心。流程大概是：</p>
+<ol>
+  <li>上电检测：检查芯片是否正常启动。</li>
+  <li>擦除Flash：把旧数据清干净。</li>
+  <li>写入Bootloader：先写引导程序。</li>
+  <li>写入应用程序：再写主程序。</li>
+  <li>写入配置数据：序列号、校准参数等。</li>
+  <li>校验：读回数据做比对。</li>
+</ol>
+
+<div class="highlight">
+  <p><strong>关键点</strong>：烧录顺序不能乱。先写Bootloader再写App，否则芯片可能变砖。我有个朋友就是先写App再写Bootloader，结果Bootloader写一半断电了，整批板子都得返工。</p>
+</div>
+
+<h4>验证阶段</h4>
+<p>烧录完不等于完事。必须做验证：</p>
+<ul>
+  <li>CRC校验：对比烧录前后的CRC值。</li>
+  <li>功能测试：比如让LED闪几下，或者输出特定信号。</li>
+  <li>序列号唯一性检查：防止重复。</li>
+</ul>
+
+<h3>序列号写入</h3>
+
+<p>序列号这东西，看着简单，坑不少。我来说说怎么设计。</p>
+
+<h4>序列号格式</h4>
+<p>我建议用这种格式：</p>
+<pre><code>typedef struct {
+    uint8_t  year;      // 年份，比如0x18表示2018年
+    uint8_t  month;     // 月份
+    uint8_t  day;       // 日期
+    uint8_t  line;      // 产线编号
+    uint16_t seq;       // 当日序号
+    uint8_t  checksum;  // 校验和
+} SerialNumber_t;</code></pre>
+
+<p>为什么这么设计？你想想看，如果哪天发现某批产品有问题，通过序列号就能快速定位到是哪天、哪条产线生产的。我在项目中就靠这个追回过一批有问题的货。</p>
+
+<h4>写入位置</h4>
+<p>序列号一般存在Flash的末尾区域。我习惯这样分配：</p>
+<table>
+  <tr>
+    <th>区域</th>
+    <th>起始地址</th>
+    <th>大小</th>
+    <th>内容</th>
+  </tr>
+  <tr>
+    <td>Bootloader</td>
+    <td>0x08000000</td>
+    <td>32KB</td>
+    <td>引导程序</td>
+  </tr>
+  <tr>
+    <td>App</td>
+    <td>0x08008000</td>
+    <td>448KB</td>
+    <td>应用程序</td>
+  </tr>
+  <tr>
+    <td>Config</td>
+    <td>0x0807E000</td>
+    <td>4KB</td>
+    <td>校准参数</td>
+  </tr>
+  <tr>
+    <td>Serial</td>
+    <td>0x0807F000</td>
+    <td>4KB</td>
+    <td>序列号</td>
+  </tr>
+</table>
+
+<div class="tip">
+  <p><strong>小技巧</strong>：序列号区域可以多留几份备份。比如写3份，读的时候用“三取二”策略。这样即使某份数据损坏，还能恢复。</p>
+</div>
+
+<h4>写入流程</h4>
+<p>实际写入时要注意：</p>
+<ol>
+  <li>先读当前序列号，防止重复写入。</li>
+  <li>生成新序列号，计算校验和。</li>
+  <li>擦除Flash扇区。</li>
+  <li>写入数据。</li>
+  <li>读回验证。</li>
+</ol>
+
+<pre><code>// 伪代码示例
+uint8_t WriteSerialNumber(SerialNumber_t *sn) {
+    // 1. 检查是否已写入
+    if (ReadSerialNumber(&old_sn) == SUCCESS) {
+        return ALREADY_WRITTEN;
+    }
+    
+    // 2. 计算校验和
+    sn->checksum = CalculateChecksum(sn);
+    
+    // 3. 擦除扇区
+    FlashErase(SERIAL_SECTOR);
+    
+    // 4. 写入三份备份
+    for (int i = 0; i < 3; i++) {
+        FlashWrite(SERIAL_ADDR + i * sizeof(SerialNumber_t), sn);
+    }
+    
+    // 5. 验证
+    return VerifySerialNumber(sn);
+}</code></pre>
+
+<h3>校准参数存储</h3>
+
+<p>校准参数比序列号复杂。每个设备的校准值都不一样，比如ADC偏移量、温度传感器系数等。</p>
+
+<h4>存储结构</h4>
+<p>我建议用键值对的方式存储：</p>
+<pre><code>typedef struct {
+    uint16_t key;       // 参数ID
+    uint16_t length;    // 数据长度
+    uint8_t  data[64];  // 参数值
+    uint16_t crc;       // CRC校验
+} CalibrationItem_t;</code></pre>
+
+<p>为什么用键值对？因为不同产品需要的校准参数不一样。有的需要3个，有的需要10个。用键值对可以灵活扩展。</p>
+
+<h4>写入策略</h4>
+<p>校准参数写入要注意几点：</p>
+<ul>
+  <li><strong>原子操作</strong>：要么全部写入成功，要么全部回滚。我遇到过写入一半断电，参数损坏的情况。</li>
+  <li><strong>版本管理</strong>：给校准数据加个版本号。这样升级固件时，能知道旧参数是否兼容。</li>
+  <li><strong>备份机制</strong>：至少保留一份有效备份。我习惯用A/B分区，一个区写坏了，自动切到另一个区。</li>
+</ul>
+
+<div class="warning">
+  <p><strong>避坑指南</strong>：我曾经遇到过一批产品，校准参数写入后，过几天就丢失了。查了半天，发现是Flash的写寿命问题。校准参数频繁擦写，把Flash写坏了。后来我改用EEPROM模拟，或者加磨损均衡算法，问题就解决了。</p>
+</div>
+
+<h4>产线校准流程</h4>
+<p>实际产线上，校准流程一般是：</p>
+<ol>
+  <li>设备上电，进入校准模式。</li>
+  <li>产线电脑发送校准指令。</li>
+  <li>设备采集标准信号，计算校准值。</li>
+  <li>设备把校准值写入Flash。</li>
+  <li>设备读回校准值，验证正确性。</li>
+  <li>产线电脑记录校准结果。</li>
+</ol>
+
+<p>这里有个细节：校准过程中，设备不能断电。我建议在硬件上加个电容，保证掉电后还能维持几十毫秒，让写入操作完成。</p>
+
+<h3>量产烧录的常见问题</h3>
+
+<p>最后，我总结几个量产烧录的常见坑：</p>
+<ul>
+  <li><strong>烧录速度慢</strong>：单个设备烧录时间太长，影响产能。我建议用多路并行烧录，或者用高速接口。</li>
+  <li><strong>烧录不稳定</strong>：接触不良、电源噪声都可能导致烧录失败。夹具和电源质量不能省。</li>
+  <li><strong>数据一致性</strong>：同一批产品，校准参数格式必须统一。我建议用配置文件管理参数定义。</li>
+  <li><strong>防呆设计</strong>：防止操作员把固件烧错。比如加个产品ID校验，ID不对就不让烧。</li>
+</ul>
+
+<div class="highlight">
+  <p><strong>核心思想</strong>：量产烧录不是写代码，是设计流程。流程设计好了，产线才能跑得顺。我见过太多研发人员，代码写得漂亮，但量产方案一塌糊涂。记住，量产烧录的目标是：快、稳、准。</p>
+</div>
+
+<p>嗯，这一讲就到这里。下一讲咱们聊聊Bootloader的调试技巧，那可是我踩过无数坑总结出来的经验。</p>
+        <div class="footer-nav">
+            <a href="27.html">← 上一章</a>
+            <a href="index.html">📖 返回目录</a>
+            <a href="29.html">下一章 →</a>
+        </div>
+        <footer>公众号:蓝海资料掘金营，微信deep3321</footer>
+    </div>
+</div>
+</div>
+</body>
+</html>

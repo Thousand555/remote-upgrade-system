@@ -1,0 +1,456 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>第24章 单元测试与模拟</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e9f0 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        /* 双边框设计：外边框 + 内阴影 */
+        .double-border {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #f1c40f;
+            border-radius: 24px;
+            box-shadow: 0 20px 30px -15px rgba(0,0,0,0.2), inset 0 1px 0 0 #fff8e0;
+            overflow: hidden;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+        }
+        .sidebar {
+            background: #fefcf5;
+            border-right: 2px solid #fdebb3;
+            padding: 24px 16px;
+        }
+        .sidebar h3 {
+            font-size: 1.4rem;
+            color: #b45f06;
+            border-left: 5px solid #f39c12;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+        .chapter-list {
+            list-style: none;
+        }
+        .chapter-list li {
+            margin-bottom: 6px;
+        }
+        .chapter-list a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #2c3e50;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .chapter-list a:hover {
+            background: #fdebd0;
+            transform: translateX(3px);
+        }
+        .chapter-list .active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 5px rgba(59,130,246,0.3);
+        }
+        .main-content {
+            padding: 30px 35px;
+            background: white;
+        }
+        .footer-nav {
+            margin-top: 45px;
+            padding-top: 20px;
+            border-top: 2px solid #f0e6d2;
+            display: flex;
+            justify-content: space-between;
+        }
+        .footer-nav a {
+            padding: 8px 24px;
+            background: #f1f5f9;
+            text-decoration: none;
+            color: #1e40af;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .footer-nav a:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #64748b;
+            border-top: 1px dashed #e2e8f0;
+            font-size: 0.9rem;
+        }
+        h2 { color: #1e3a8a; border-left: 6px solid #f59e0b; padding-left: 15px; margin: 20px 0 15px; }
+        h3 { color: #2c3e50; margin: 20px 0 10px; }
+        pre {
+            background: #2d2f36; color: #f8f8f2; padding: 15px; border-radius: 12px;
+            overflow-x: auto; font-family: 'JetBrains Mono', monospace; margin: 15px 0;
+        }
+        table {
+            width: 100%; border-collapse: collapse; margin: 15px 0; background: #fefce8;
+        }
+        th, td {
+            border: 1px solid #fcd34d; padding: 10px; text-align: left;
+        }
+        th { background: #fffbeb; }
+        .tip, .warning, .highlight {
+            padding: 12px 18px; border-radius: 16px; margin: 15px 0;
+        }
+        .tip { background: #e0f2fe; border-left: 6px solid #0ea5e9; }
+        .warning { background: #fee2e2; border-left: 6px solid #ef4444; }
+        .highlight { background: #fef9c3; border: 1px solid #facc15; }
+    </style>
+</head>
+<body>
+<div class="double-border">
+<div class="container">
+    <div class="sidebar">
+        <h3>📚 课程目录</h3>
+        <ul class="chapter-list">
+            <li><a href="01.html" class="">第1章 Bootloader入门</a></li>
+<li><a href="02.html" class="">第2章 嵌入式系统基础</a></li>
+<li><a href="03.html" class="">第3章 开发环境搭建</a></li>
+<li><a href="04.html" class="">第4章 链接脚本深入</a></li>
+<li><a href="05.html" class="">第5章 启动代码分析</a></li>
+<li><a href="06.html" class="">第6章 中断向量表重映射</a></li>
+<li><a href="07.html" class="">第7章 Flash驱动开发</a></li>
+<li><a href="08.html" class="">第8章 串口通信协议</a></li>
+<li><a href="09.html" class="">第9章 固件包格式设计</a></li>
+<li><a href="10.html" class="">第10章 固件下载流程</a></li>
+<li><a href="11.html" class="">第11章 固件校验与完整性检查</a></li>
+<li><a href="12.html" class="">第12章 固件烧录与跳转</a></li>
+<li><a href="13.html" class="">第13章 双备份启动策略</a></li>
+<li><a href="14.html" class="">第14章 看门狗与异常处理</a></li>
+<li><a href="15.html" class="">第15章 固件加密与安全启动</a></li>
+<li><a href="16.html" class="">第16章 OTA升级原理</a></li>
+<li><a href="17.html" class="">第17章 Bootloader与APP交互</a></li>
+<li><a href="18.html" class="">第18章 多分区管理</a></li>
+<li><a href="19.html" class="">第19章 命令行接口(CLI)开发</a></li>
+<li><a href="20.html" class="">第20章 日志系统设计</a></li>
+<li><a href="21.html" class="">第21章 性能优化</a></li>
+<li><a href="22.html" class="">第22章 低功耗模式</a></li>
+<li><a href="23.html" class="">第23章 外设驱动封装</a></li>
+<li><a href="24.html" class="active">第24章 单元测试与模拟</a></li>
+<li><a href="25.html" class="">第25章 硬件调试技巧</a></li>
+<li><a href="26.html" class="">第26章 常见问题排查</a></li>
+<li><a href="27.html" class="">第27章 RTOS集成</a></li>
+<li><a href="28.html" class="">第28章 量产烧录方案</a></li>
+<li><a href="29.html" class="">第29章 安全防护</a></li>
+<li><a href="30.html" class="">第30章 项目实战</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <h2>第24章：单元测试与模拟：Cmock/Ceedling框架使用、Flash驱动模拟测试、通信协议测试</h2>
+
+<p>说实话，很多做Bootloader的同行，一听到「单元测试」就觉得是上层应用的事。我当年也这么想——嵌入式嘛，硬件耦合那么紧，测什么测？直到有一次，一个Flash驱动的小bug，让整个产线停了半天。嗯，从那以后，我再也不敢轻视测试了。</p>
+
+<p>这一章，我们就来聊聊怎么用Cmock和Ceedling这套工具，给Bootloader做单元测试。说白了，就是让代码自己证明自己是对的。</p>
+
+<h3>24.1 为什么Bootloader需要单元测试？</h3>
+
+<p>你想想看，Bootloader是系统上电后第一个跑的程序。它挂了，整个设备就变砖了。我见过太多项目，Bootloader代码写完了，全靠硬件工程师拿示波器在那点来点去。这哪是测试？这是碰运气。</p>
+
+<p>单元测试能帮你做到三件事：</p>
+<ul>
+  <li><strong>早期发现问题</strong>——编译完就能跑测试，不用等硬件就绪</li>
+  <li><strong>回归保护</strong>——改了一行代码，跑一遍测试就知道有没有破坏原有逻辑</li>
+  <li><strong>文档化行为</strong>——测试用例本身就是最好的使用说明</li>
+</ul>
+
+<div class="highlight">
+  <p><strong>核心观点：</strong>没有单元测试的Bootloader，就像没有安全带的赛车。跑得快，但出事也快。</p>
+</div>
+
+<h3>24.2 Ceedling + Cmock：嵌入式测试的黄金搭档</h3>
+
+<p>Ceedling本质上是一个构建系统，它把Unity（测试框架）和Cmock（模拟框架）整合在了一起。我个人习惯用Ceedling来管理整个测试工程，因为它自动帮你处理了编译、链接、运行这些杂事。</p>
+
+<h4>24.2.1 安装与初始化</h4>
+
+<p>安装其实很简单，Ruby环境配好之后，一行命令就搞定：</p>
+
+<pre><code>gem install ceedling</code></pre>
+
+<p>然后在你Bootloader工程的根目录下跑：</p>
+
+<pre><code>ceedling new bootloader_test</code></pre>
+
+<p>这会生成一个测试工程目录，结构大概是这样：</p>
+
+<pre><code>bootloader_test/
+├── src/          # 放你的源代码
+├── test/         # 放测试用例
+├── lib/          # 放依赖库
+└── project.yml   # 配置文件</code></pre>
+
+<p>我记得第一次用的时候，觉得这目录结构有点死板。后来用习惯了才发现，这种约定优于配置的方式，反而让团队协作变得简单了。</p>
+
+<h4>24.2.2 Cmock的核心思想</h4>
+
+<p>Cmock是用来做模拟的。什么叫模拟？就是当你的代码调用了一个外部函数（比如Flash读写函数），测试框架可以「假装」这个函数存在，并且控制它的返回值。</p>
+
+<p>举个例子，你的Bootloader里有一段代码要擦除Flash扇区：</p>
+
+<pre><code>// flash_driver.c
+int flash_erase_sector(uint32_t addr) {
+    // 调用底层硬件操作
+    return HAL_FLASH_Erase(addr);
+}
+
+// bootloader.c
+int update_firmware(void) {
+    if (flash_erase_sector(0x08010000) != 0) {
+        return -1;  // 擦除失败
+    }
+    // 继续写数据...
+    return 0;
+}</code></pre>
+
+<p>在真实硬件上测试update_firmware，你得先有一块板子，还得担心擦坏了什么。用Cmock，你可以这样测：</p>
+
+<pre><code>// test_bootloader.c
+#include "unity.h"
+#include "mock_flash_driver.h"
+
+void test_update_firmware_erase_fail(void) {
+    // 设置模拟：让flash_erase_sector返回-1
+    flash_erase_sector_ExpectAndReturn(0x08010000, -1);
+    
+    // 调用被测函数
+    int result = update_firmware();
+    
+    // 验证结果
+    TEST_ASSERT_EQUAL(-1, result);
+}
+
+void test_update_firmware_success(void) {
+    // 设置模拟：让flash_erase_sector返回0
+    flash_erase_sector_ExpectAndReturn(0x08010000, 0);
+    
+    int result = update_firmware();
+    
+    TEST_ASSERT_EQUAL(0, result);
+}</code></pre>
+
+<div class="tip">
+  <p><strong>小技巧：</strong>Cmock会自动检查函数调用顺序和参数。如果被测代码调用了flash_erase_sector两次，但你只设置了一次Expect，测试就会失败。这个特性在调试复杂状态机时特别有用。</p>
+</div>
+
+<h3>24.3 Flash驱动模拟测试：一个实战案例</h3>
+
+<p>Flash驱动是Bootloader里最容易出问题的地方。我曾经遇到过一个坑：某款Flash芯片在连续擦写时，需要插入延时。代码里没加，结果跑了几百次后，突然有一次写进去的数据全是0xFF。</p>
+
+<p>这种问题在硬件上复现很难，但用模拟测试可以轻松覆盖。</p>
+
+<h4>24.3.1 设计可测试的Flash驱动</h4>
+
+<p>要让Flash驱动可测试，关键是把硬件操作抽象出来。我一般会这样做：</p>
+
+<pre><code>// flash_driver.h
+typedef struct {
+    int (*init)(void);
+    int (*erase)(uint32_t addr);
+    int (*write)(uint32_t addr, const uint8_t* data, uint32_t len);
+    int (*read)(uint32_t addr, uint8_t* data, uint32_t len);
+} flash_ops_t;
+
+// 外部接口
+int flash_init(const flash_ops_t* ops);
+int flash_erase_sector(uint32_t addr);
+int flash_write_page(uint32_t addr, const uint8_t* data, uint32_t len);</code></pre>
+
+<p>这样设计的好处是，测试时可以传入一个模拟的ops结构体，完全控制Flash的行为。</p>
+
+<h4>24.3.2 模拟测试用例</h4>
+
+<p>我们来写几个关键的测试用例：</p>
+
+<pre><code>// test_flash_driver.c
+#include "unity.h"
+#include "mock_flash_ops.h"
+
+static flash_ops_t test_ops;
+
+void setUp(void) {
+    // 每个测试前重置模拟
+    test_ops.init = flash_init_Stub;
+    test_ops.erase = flash_erase_Stub;
+    test_ops.write = flash_write_Stub;
+    test_ops.read = flash_read_Stub;
+}
+
+void test_flash_erase_retry_on_timeout(void) {
+    // 模拟前两次擦除超时，第三次成功
+    flash_erase_StubWithReturn(0x08010000, -1);
+    flash_erase_StubWithReturn(0x08010000, -1);
+    flash_erase_StubWithReturn(0x08010000, 0);
+    
+    int result = flash_erase_sector(0x08010000);
+    TEST_ASSERT_EQUAL(0, result);
+}
+
+void test_flash_write_verify_fail(void) {
+    // 模拟写入成功但校验失败
+    flash_write_StubWithReturn(0x08020000, test_data, 256, 0);
+    flash_read_StubWithReturn(0x08020000, corrupted_data, 256, 0);
+    
+    int result = flash_write_page(0x08020000, test_data, 256);
+    TEST_ASSERT_EQUAL(-2, result);  // 校验失败错误码
+}</code></pre>
+
+<div class="warning">
+  <p><strong>注意：</strong>模拟测试只能验证逻辑正确性，不能替代硬件测试。Flash的时序特性、电压波动等物理问题，还是得在真实硬件上验证。我的做法是：单元测试覆盖90%的逻辑路径，硬件测试覆盖边界条件和异常场景。</p>
+</div>
+
+<h3>24.4 通信协议测试：让数据说话</h3>
+
+<p>Bootloader的通信协议，比如XMODEM、YMODEM或者自定义的升级协议，是另一个测试重点。这类协议通常有复杂的握手、校验和重传机制。</p>
+
+<h4>24.4.1 模拟通信层</h4>
+
+<p>通信协议的测试，核心是模拟底层收发接口。我一般会这样抽象：</p>
+
+<pre><code>// comm_driver.h
+typedef struct {
+    int (*send)(const uint8_t* data, uint32_t len);
+    int (*receive)(uint8_t* data, uint32_t timeout_ms);
+} comm_ops_t;</code></pre>
+
+<p>测试时，我们可以模拟各种网络状况：</p>
+
+<pre><code>// test_xmodem.c
+#include "unity.h"
+#include "mock_comm_driver.h"
+
+void test_xmodem_normal_transfer(void) {
+    // 模拟正常接收流程
+    // 发送NAK请求
+    comm_send_Expect(NAK, 1);
+    // 接收第一个数据包
+    comm_receive_ExpectAndReturn(test_packet, 133, 133);
+    // 发送ACK确认
+    comm_send_Expect(ACK, 1);
+    
+    int result = xmodem_receive();
+    TEST_ASSERT_EQUAL(0, result);
+}
+
+void test_xmodem_retry_on_crc_error(void) {
+    // 模拟CRC错误
+    comm_send_Expect(NAK, 1);
+    comm_receive_ExpectAndReturn(corrupted_packet, 133, 133);
+    // 发送NAK请求重传
+    comm_send_Expect(NAK, 1);
+    comm_receive_ExpectAndReturn(correct_packet, 133, 133);
+    comm_send_Expect(ACK, 1);
+    
+    int result = xmodem_receive();
+    TEST_ASSERT_EQUAL(0, result);
+}
+
+void test_xmodem_timeout_handling(void) {
+    // 模拟接收超时
+    comm_send_Expect(NAK, 1);
+    comm_receive_ExpectAndReturn(NULL, 0, -1);  // 超时返回-1
+    
+    // 重试3次后放弃
+    comm_send_Expect(NAK, 1);
+    comm_receive_ExpectAndReturn(NULL, 0, -1);
+    comm_send_Expect(NAK, 1);
+    comm_receive_ExpectAndReturn(NULL, 0, -1);
+    
+    int result = xmodem_receive();
+    TEST_ASSERT_EQUAL(-3, result);  // 超时错误码
+}</code></pre>
+
+<h4>24.4.2 测试覆盖率分析</h4>
+
+<p>Ceedling自带覆盖率分析工具。跑完测试后，执行：</p>
+
+<pre><code>ceedling gcov:all</code></pre>
+
+<p>它会生成一个HTML报告，告诉你哪些代码行被测试覆盖了，哪些没有。我个人习惯把覆盖率目标定在80%以上，核心逻辑（比如状态机、错误处理）要求100%。</p>
+
+<table>
+  <tr>
+    <th>模块</th>
+    <th>行覆盖率</th>
+    <th>分支覆盖率</th>
+    <th>备注</th>
+  </tr>
+  <tr>
+    <td>Flash驱动</td>
+    <td>92%</td>
+    <td>88%</td>
+    <td>硬件初始化部分未覆盖</td>
+  </tr>
+  <tr>
+    <td>XMODEM协议</td>
+    <td>96%</td>
+    <td>94%</td>
+    <td>所有状态机路径已覆盖</td>
+  </tr>
+  <tr>
+    <td>CRC校验</td>
+    <td>100%</td>
+    <td>100%</td>
+    <td>边界值测试通过</td>
+  </tr>
+</table>
+
+<h3>24.5 持续集成中的测试实践</h3>
+
+<p>测试写好了，怎么让它持续发挥作用？我的建议是集成到CI流水线中。每次提交代码，自动跑一遍所有测试。</p>
+
+<p>Ceedling支持命令行模式，非常适合CI：</p>
+
+<pre><code># Jenkins/GitLab CI脚本
+ceedling clean
+ceedling test:all
+ceedling gcov:all</code></pre>
+
+<p>如果测试失败，CI直接报红，开发者必须修复才能合并。这个流程看起来简单，但能拦住90%的回归问题。</p>
+
+<div class="highlight">
+  <p><strong>我的经验：</strong>刚开始推行单元测试时，团队阻力很大，觉得浪费时间。后来我定了个规矩：新代码必须带测试，旧代码逐步补。三个月后，Bug率下降了60%。从那以后，没人再质疑测试的价值了。</p>
+</div>
+
+<h3>24.6 本章小结</h3>
+
+<p>单元测试不是银弹，但它确实是Bootloader开发中性价比最高的质量保障手段。Ceedling和Cmock这套组合，让嵌入式测试变得不再痛苦。</p>
+
+<p>记住几个要点：</p>
+<ul>
+  <li>用Ceedling管理测试工程，省心省力</li>
+  <li>Cmock模拟外部依赖，让测试脱离硬件</li>
+  <li>Flash驱动和通信协议是测试重点</li>
+  <li>覆盖率80%是底线，核心逻辑要100%</li>
+  <li>集成到CI中，让测试自动化运行</li>
+</ul>
+
+<p>下一章，我们会聊聊Bootloader的固件加密与安全启动。嗯，那又是一个充满挑战的话题。到时候见。</p>
+        <div class="footer-nav">
+            <a href="23.html">← 上一章</a>
+            <a href="index.html">📖 返回目录</a>
+            <a href="25.html">下一章 →</a>
+        </div>
+        <footer>公众号:蓝海资料掘金营，微信deep3321</footer>
+    </div>
+</div>
+</div>
+</body>
+</html>

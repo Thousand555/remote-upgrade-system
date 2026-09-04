@@ -1,0 +1,378 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>第12章 固件烧录与跳转</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e9f0 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        /* 双边框设计：外边框 + 内阴影 */
+        .double-border {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #f1c40f;
+            border-radius: 24px;
+            box-shadow: 0 20px 30px -15px rgba(0,0,0,0.2), inset 0 1px 0 0 #fff8e0;
+            overflow: hidden;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+        }
+        .sidebar {
+            background: #fefcf5;
+            border-right: 2px solid #fdebb3;
+            padding: 24px 16px;
+        }
+        .sidebar h3 {
+            font-size: 1.4rem;
+            color: #b45f06;
+            border-left: 5px solid #f39c12;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+        .chapter-list {
+            list-style: none;
+        }
+        .chapter-list li {
+            margin-bottom: 6px;
+        }
+        .chapter-list a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #2c3e50;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .chapter-list a:hover {
+            background: #fdebd0;
+            transform: translateX(3px);
+        }
+        .chapter-list .active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 5px rgba(59,130,246,0.3);
+        }
+        .main-content {
+            padding: 30px 35px;
+            background: white;
+        }
+        .footer-nav {
+            margin-top: 45px;
+            padding-top: 20px;
+            border-top: 2px solid #f0e6d2;
+            display: flex;
+            justify-content: space-between;
+        }
+        .footer-nav a {
+            padding: 8px 24px;
+            background: #f1f5f9;
+            text-decoration: none;
+            color: #1e40af;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .footer-nav a:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #64748b;
+            border-top: 1px dashed #e2e8f0;
+            font-size: 0.9rem;
+        }
+        h2 { color: #1e3a8a; border-left: 6px solid #f59e0b; padding-left: 15px; margin: 20px 0 15px; }
+        h3 { color: #2c3e50; margin: 20px 0 10px; }
+        pre {
+            background: #2d2f36; color: #f8f8f2; padding: 15px; border-radius: 12px;
+            overflow-x: auto; font-family: 'JetBrains Mono', monospace; margin: 15px 0;
+        }
+        table {
+            width: 100%; border-collapse: collapse; margin: 15px 0; background: #fefce8;
+        }
+        th, td {
+            border: 1px solid #fcd34d; padding: 10px; text-align: left;
+        }
+        th { background: #fffbeb; }
+        .tip, .warning, .highlight {
+            padding: 12px 18px; border-radius: 16px; margin: 15px 0;
+        }
+        .tip { background: #e0f2fe; border-left: 6px solid #0ea5e9; }
+        .warning { background: #fee2e2; border-left: 6px solid #ef4444; }
+        .highlight { background: #fef9c3; border: 1px solid #facc15; }
+    </style>
+</head>
+<body>
+<div class="double-border">
+<div class="container">
+    <div class="sidebar">
+        <h3>📚 课程目录</h3>
+        <ul class="chapter-list">
+            <li><a href="01.html" class="">第1章 Bootloader入门</a></li>
+<li><a href="02.html" class="">第2章 嵌入式系统基础</a></li>
+<li><a href="03.html" class="">第3章 开发环境搭建</a></li>
+<li><a href="04.html" class="">第4章 链接脚本深入</a></li>
+<li><a href="05.html" class="">第5章 启动代码分析</a></li>
+<li><a href="06.html" class="">第6章 中断向量表重映射</a></li>
+<li><a href="07.html" class="">第7章 Flash驱动开发</a></li>
+<li><a href="08.html" class="">第8章 串口通信协议</a></li>
+<li><a href="09.html" class="">第9章 固件包格式设计</a></li>
+<li><a href="10.html" class="">第10章 固件下载流程</a></li>
+<li><a href="11.html" class="">第11章 固件校验与完整性检查</a></li>
+<li><a href="12.html" class="active">第12章 固件烧录与跳转</a></li>
+<li><a href="13.html" class="">第13章 双备份启动策略</a></li>
+<li><a href="14.html" class="">第14章 看门狗与异常处理</a></li>
+<li><a href="15.html" class="">第15章 固件加密与安全启动</a></li>
+<li><a href="16.html" class="">第16章 OTA升级原理</a></li>
+<li><a href="17.html" class="">第17章 Bootloader与APP交互</a></li>
+<li><a href="18.html" class="">第18章 多分区管理</a></li>
+<li><a href="19.html" class="">第19章 命令行接口(CLI)开发</a></li>
+<li><a href="20.html" class="">第20章 日志系统设计</a></li>
+<li><a href="21.html" class="">第21章 性能优化</a></li>
+<li><a href="22.html" class="">第22章 低功耗模式</a></li>
+<li><a href="23.html" class="">第23章 外设驱动封装</a></li>
+<li><a href="24.html" class="">第24章 单元测试与模拟</a></li>
+<li><a href="25.html" class="">第25章 硬件调试技巧</a></li>
+<li><a href="26.html" class="">第26章 常见问题排查</a></li>
+<li><a href="27.html" class="">第27章 RTOS集成</a></li>
+<li><a href="28.html" class="">第28章 量产烧录方案</a></li>
+<li><a href="29.html" class="">第29章 安全防护</a></li>
+<li><a href="30.html" class="">第30章 项目实战</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <h2>第十二章：固件烧录与跳转</h2>
+
+<p>好，咱们今天聊点实在的。固件写进去了，怎么让它跑起来？这中间的门道，比你想的要多。</p>
+
+<p>我个人习惯把这一章分成两大部分：一是怎么把固件安全地烧进Flash，二是怎么从Bootloader跳转到应用程序。这两个环节，任何一个出问题，板子就变砖了。嗯，我当年就吃过这个亏。</p>
+
+<h3>12.1 固件写入Flash的完整流程</h3>
+
+<p>先说说烧录。说白了，就是把你的二进制文件，一个字节一个字节地塞进Flash里。但这里有个坑——Flash不能像RAM那样随便写。</p>
+
+<p><strong>Flash的特性决定了写入方式：</strong></p>
+<ul>
+  <li>擦除操作：Flash必须先擦除才能写。擦除的最小单位是扇区（Sector），不是字节。</li>
+  <li>写入操作：擦除后，按页（Page）或按字（Word）写入。</li>
+  <li>读取操作：这个简单，直接地址访问就行。</li>
+</ul>
+
+<p>我在项目中遇到过一件事：有个同事没做擦除就直接写，结果数据全是乱的。排查了两天才找到原因。你想想看，这种低级错误，其实很容易避免。</p>
+
+<div class="highlight">
+  <p><strong>核心流程：</strong></p>
+  <ol>
+    <li>接收固件数据（通过UART、SPI、USB等接口）</li>
+    <li>校验数据完整性（CRC32或SHA256）</li>
+    <li>擦除目标扇区</li>
+    <li>按页写入数据</li>
+    <li>读取验证（读回比对）</li>
+    <li>标记固件有效标志</li>
+  </ol>
+</div>
+
+<p>代码示例，我习惯这样写Flash写入函数：</p>
+
+<pre><code>// 伪代码：Flash写入流程
+int flash_write_firmware(uint32_t addr, uint8_t *data, uint32_t len) {
+    uint32_t sector_size = 4096;  // 假设扇区大小4KB
+    uint32_t page_size = 256;     // 假设页大小256字节
+    
+    // 1. 计算需要擦除的扇区范围
+    uint32_t start_sector = addr / sector_size;
+    uint32_t end_sector = (addr + len) / sector_size;
+    
+    // 2. 逐个扇区擦除
+    for (uint32_t i = start_sector; i &lt;= end_sector; i++) {
+        flash_erase_sector(i * sector_size);
+    }
+    
+    // 3. 按页写入
+    uint32_t offset = 0;
+    while (offset &lt; len) {
+        uint32_t write_len = (len - offset &gt; page_size) ? page_size : (len - offset);
+        flash_write_page(addr + offset, data + offset, write_len);
+        offset += write_len;
+    }
+    
+    // 4. 验证
+    if (memcmp((void*)addr, data, len) != 0) {
+        return -1;  // 写入失败
+    }
+    
+    return 0;  // 成功
+}
+</code></pre>
+
+<div class="warning">
+  <p><strong>注意：</strong>擦除操作很耗时。一个4KB的扇区，擦除可能需要几十毫秒。如果固件很大（比如1MB），整个擦除过程可能持续好几秒。这时候，看门狗定时器（WDT）可能会超时复位。我曾经因为这个原因，不得不把WDT喂狗逻辑加进擦除循环里。</p>
+</div>
+
+<h3>12.2 跳转到应用程序的准备工作</h3>
+
+<p>固件烧好了，接下来就是跳转。但跳转不是简单的goto。你得做好三件事：</p>
+
+<ul>
+  <li><strong>关闭中断</strong>：跳转前必须关掉所有中断，包括外设中断和系统滴答定时器。</li>
+  <li><strong>清理外设状态</strong>：把用过的外设复位到默认状态。</li>
+  <li><strong>设置栈指针和PC指针</strong>：这是最关键的一步。</li>
+</ul>
+
+<p>为什么会这样？你想想看，如果Bootloader开着中断就跳过去了，应用程序的中断向量表还没初始化，一个中断进来，程序直接跑飞。嗯，我见过这种场景，板子直接死机，只能重新上电。</p>
+
+<h3>12.3 栈指针与PC指针设置</h3>
+
+<p>这是跳转的核心。ARM Cortex-M系列处理器，启动时从向量表取前两个值：</p>
+
+<ul>
+  <li>向量表偏移0x00：栈指针（MSP）初始值</li>
+  <li>向量表偏移0x04：复位向量（PC指针）初始值</li>
+</ul>
+
+<p>所以，跳转的本质就是：</p>
+
+<pre><code>// 伪代码：跳转到应用程序
+typedef void (*app_entry_t)(void);
+
+void jump_to_app(uint32_t app_addr) {
+    // 1. 关闭全局中断
+    __disable_irq();
+    
+    // 2. 关闭所有外设中断（具体实现因芯片而异）
+    for (int i = 0; i &lt; NUM_IRQS; i++) {
+        NVIC_DisableIRQ((IRQn_Type)i);
+        NVIC_ClearPendingIRQ((IRQn_Type)i);
+    }
+    
+    // 3. 从应用程序向量表读取栈指针和PC指针
+    uint32_t msp = *(volatile uint32_t*)app_addr;
+    uint32_t pc  = *(volatile uint32_t*)(app_addr + 4);
+    
+    // 4. 设置主栈指针
+    __set_MSP(msp);
+    
+    // 5. 跳转到应用程序
+    app_entry_t app_entry = (app_entry_t)pc;
+    app_entry();
+    
+    // 这里永远不会返回
+}
+</code></pre>
+
+<div class="tip">
+  <p><strong>个人经验：</strong>我习惯在跳转前把SysTick定时器也关掉。因为SysTick的中断优先级通常最低，但它的中断向量在应用程序里可能被重新映射了。如果不关，跳转后第一个SysTick中断就会出问题。</p>
+</div>
+
+<h3>12.4 向量表重映射</h3>
+
+<p>还有一个容易被忽略的点：向量表重映射。如果应用程序不是从Flash起始地址（0x08000000）运行的，而是从偏移地址（比如0x08020000）运行的，那么应用程序必须重新设置向量表偏移。</p>
+
+<p>在ARM Cortex-M上，通过SCB->VTOR寄存器设置：</p>
+
+<pre><code>// 应用程序启动代码中设置向量表偏移
+#define APP_BASE_ADDR 0x08020000
+
+void app_init(void) {
+    // 设置向量表偏移
+    SCB-&gt;VTOR = APP_BASE_ADDR;
+    
+    // 然后才能使能中断
+    __enable_irq();
+}
+</code></pre>
+
+<p>如果不做这一步，中断来了之后，CPU会去Flash起始地址找中断向量，找到的是Bootloader的向量表，而不是应用程序的。结果就是：中断响应完全错乱。</p>
+
+<div class="warning">
+  <p><strong>我曾经踩过的坑：</strong>有一次做OTA升级，应用程序烧录到0x08040000地址。跳转后，串口中断死活不工作。查了两天，发现是应用程序里忘了设置VTOR。中断来了，CPU跑到Bootloader的向量表里找串口中断处理函数，当然找不到。从那以后，我把VTOR设置写进了应用程序启动代码的第一行。</p>
+</div>
+
+<h3>12.5 完整的跳转流程总结</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>步骤</th>
+      <th>操作</th>
+      <th>说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>关闭全局中断</td>
+      <td>__disable_irq()</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>关闭所有外设中断</td>
+      <td>逐个关闭并清除挂起标志</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>复位外设到默认状态</td>
+      <td>防止外设残留状态影响应用程序</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>读取应用程序向量表</td>
+      <td>获取MSP和PC初始值</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>设置主栈指针</td>
+      <td>__set_MSP(msp)</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>跳转到应用程序</td>
+      <td>通过函数指针跳转</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>应用程序设置VTOR</td>
+      <td>在应用程序启动代码中完成</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>嗯，到这里，固件烧录和跳转的核心内容就讲完了。说白了，就是两件事：把数据写对，把指针设对。但这两件事，任何一个细节没处理好，板子就起不来。</p>
+
+<p>我个人建议，每次写完跳转代码，先做一次完整的测试：烧录、跳转、运行、中断响应。别偷懒，这个流程值得你花时间验证。</p>
+
+<div class="highlight">
+  <p><strong>避坑指南：</strong></p>
+  <ul>
+    <li>跳转前一定要关中断，包括SysTick</li>
+    <li>应用程序一定要设置VTOR（如果地址有偏移）</li>
+    <li>跳转后不要指望任何Bootloader的全局变量还能用</li>
+    <li>Flash写入过程中要喂狗，防止超时复位</li>
+  </ul>
+</div>
+
+<p>下一章，咱们聊聊固件校验和签名验证。这个更刺激，涉及到安全启动。到时候见。</p>
+        <div class="footer-nav">
+            <a href="11.html">← 上一章</a>
+            <a href="index.html">📖 返回目录</a>
+            <a href="13.html">下一章 →</a>
+        </div>
+        <footer>公众号:蓝海资料掘金营，微信deep3321</footer>
+    </div>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,394 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>第26章 常见问题排查</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e9f0 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        /* 双边框设计：外边框 + 内阴影 */
+        .double-border {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #f1c40f;
+            border-radius: 24px;
+            box-shadow: 0 20px 30px -15px rgba(0,0,0,0.2), inset 0 1px 0 0 #fff8e0;
+            overflow: hidden;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+        }
+        .sidebar {
+            background: #fefcf5;
+            border-right: 2px solid #fdebb3;
+            padding: 24px 16px;
+        }
+        .sidebar h3 {
+            font-size: 1.4rem;
+            color: #b45f06;
+            border-left: 5px solid #f39c12;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+        .chapter-list {
+            list-style: none;
+        }
+        .chapter-list li {
+            margin-bottom: 6px;
+        }
+        .chapter-list a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #2c3e50;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .chapter-list a:hover {
+            background: #fdebd0;
+            transform: translateX(3px);
+        }
+        .chapter-list .active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 5px rgba(59,130,246,0.3);
+        }
+        .main-content {
+            padding: 30px 35px;
+            background: white;
+        }
+        .footer-nav {
+            margin-top: 45px;
+            padding-top: 20px;
+            border-top: 2px solid #f0e6d2;
+            display: flex;
+            justify-content: space-between;
+        }
+        .footer-nav a {
+            padding: 8px 24px;
+            background: #f1f5f9;
+            text-decoration: none;
+            color: #1e40af;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .footer-nav a:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #64748b;
+            border-top: 1px dashed #e2e8f0;
+            font-size: 0.9rem;
+        }
+        h2 { color: #1e3a8a; border-left: 6px solid #f59e0b; padding-left: 15px; margin: 20px 0 15px; }
+        h3 { color: #2c3e50; margin: 20px 0 10px; }
+        pre {
+            background: #2d2f36; color: #f8f8f2; padding: 15px; border-radius: 12px;
+            overflow-x: auto; font-family: 'JetBrains Mono', monospace; margin: 15px 0;
+        }
+        table {
+            width: 100%; border-collapse: collapse; margin: 15px 0; background: #fefce8;
+        }
+        th, td {
+            border: 1px solid #fcd34d; padding: 10px; text-align: left;
+        }
+        th { background: #fffbeb; }
+        .tip, .warning, .highlight {
+            padding: 12px 18px; border-radius: 16px; margin: 15px 0;
+        }
+        .tip { background: #e0f2fe; border-left: 6px solid #0ea5e9; }
+        .warning { background: #fee2e2; border-left: 6px solid #ef4444; }
+        .highlight { background: #fef9c3; border: 1px solid #facc15; }
+    </style>
+</head>
+<body>
+<div class="double-border">
+<div class="container">
+    <div class="sidebar">
+        <h3>📚 课程目录</h3>
+        <ul class="chapter-list">
+            <li><a href="01.html" class="">第1章 Bootloader入门</a></li>
+<li><a href="02.html" class="">第2章 嵌入式系统基础</a></li>
+<li><a href="03.html" class="">第3章 开发环境搭建</a></li>
+<li><a href="04.html" class="">第4章 链接脚本深入</a></li>
+<li><a href="05.html" class="">第5章 启动代码分析</a></li>
+<li><a href="06.html" class="">第6章 中断向量表重映射</a></li>
+<li><a href="07.html" class="">第7章 Flash驱动开发</a></li>
+<li><a href="08.html" class="">第8章 串口通信协议</a></li>
+<li><a href="09.html" class="">第9章 固件包格式设计</a></li>
+<li><a href="10.html" class="">第10章 固件下载流程</a></li>
+<li><a href="11.html" class="">第11章 固件校验与完整性检查</a></li>
+<li><a href="12.html" class="">第12章 固件烧录与跳转</a></li>
+<li><a href="13.html" class="">第13章 双备份启动策略</a></li>
+<li><a href="14.html" class="">第14章 看门狗与异常处理</a></li>
+<li><a href="15.html" class="">第15章 固件加密与安全启动</a></li>
+<li><a href="16.html" class="">第16章 OTA升级原理</a></li>
+<li><a href="17.html" class="">第17章 Bootloader与APP交互</a></li>
+<li><a href="18.html" class="">第18章 多分区管理</a></li>
+<li><a href="19.html" class="">第19章 命令行接口(CLI)开发</a></li>
+<li><a href="20.html" class="">第20章 日志系统设计</a></li>
+<li><a href="21.html" class="">第21章 性能优化</a></li>
+<li><a href="22.html" class="">第22章 低功耗模式</a></li>
+<li><a href="23.html" class="">第23章 外设驱动封装</a></li>
+<li><a href="24.html" class="">第24章 单元测试与模拟</a></li>
+<li><a href="25.html" class="">第25章 硬件调试技巧</a></li>
+<li><a href="26.html" class="active">第26章 常见问题排查</a></li>
+<li><a href="27.html" class="">第27章 RTOS集成</a></li>
+<li><a href="28.html" class="">第28章 量产烧录方案</a></li>
+<li><a href="29.html" class="">第29章 安全防护</a></li>
+<li><a href="30.html" class="">第30章 项目实战</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <h2>第二十六讲：常见问题排查——Bootloader无法启动、固件校验失败、跳转后程序跑飞</h2>
+
+<p>做Bootloader开发，说白了就是跟各种“死法”打交道。我做了这么多年，最怕的不是功能做不出来，而是板子焊好、程序烧进去，结果一上电——啥反应没有。</p>
+
+<p>这一讲，咱们就聊聊最常见的三个“翻车现场”：<strong>Bootloader起不来、固件校验过不去、跳转后程序飞了</strong>。每个问题我都踩过坑，今天把经验全倒出来。</p>
+
+<h3>一、Bootloader无法启动</h3>
+
+<p>板子上电，LED不闪，串口没输出。嗯，这情况我遇到过不下十次。别慌，先按顺序排查。</p>
+
+<h4>1. 硬件层面的“隐形杀手”</h4>
+
+<p>先看电源。我有个血的教训——有一次折腾了两天，最后发现是LDO输出电容焊反了，纹波太大导致MCU上电时序不对。你想想看，Bootloader代码还没跑起来，电源就不干净，后面全白搭。</p>
+
+<p>检查清单：</p>
+<ul>
+  <li><strong>供电电压</strong>：用示波器看启动瞬间的电压跌落。有些MCU在3.3V以下就罢工了。</li>
+  <li><strong>复位引脚</strong>：我习惯在复位脚上挂个10k上拉电阻，再加个100nF电容到地。别省这个电容，否则上电瞬间复位脚毛刺能让你怀疑人生。</li>
+  <li><strong>时钟源</strong>：外部晶振起振了吗？示波器探头点一下OSC脚。如果用的是内部RC，确认配置没错。</li>
+</ul>
+
+<div class="warning">
+  <strong>⚠️ 特别注意：</strong> 有些MCU的BOOT引脚有内部上拉/下拉，但外部电路如果接了强上拉，会覆盖内部配置。我曾经因为BOOT0引脚上多焊了个10k电阻，导致芯片死活进不了系统Bootloader。
+</div>
+
+<h4>2. 启动配置“张冠李戴”</h4>
+
+<p>很多MCU有多个启动区域：主Flash、系统Bootloader、SRAM。检查一下：</p>
+<ul>
+  <li>BOOT0/BOOT1引脚电平对不对？</li>
+  <li>Option Bytes（选项字节）有没有被意外修改？</li>
+  <li>Flash的起始地址有没有被擦除？</li>
+</ul>
+
+<p>我个人习惯，在Bootloader最开始的地方放一段“心跳灯”代码——哪怕系统还没初始化完，先让一个GPIO输出方波。这样至少能确认MCU在跑。</p>
+
+<pre><code>// 最简单的“我还活着”检测
+void early_init(void) {
+    // 先别管时钟配置，直接用默认时钟
+    GPIOA-&gt;CRL = 0x33333333;  // 推挽输出50MHz
+    while(1) {
+        GPIOA-&gt;BSRR = GPIO_Pin_0;  // 亮
+        delay_rough(100000);
+        GPIOA-&gt;BRR = GPIO_Pin_0;   // 灭
+        delay_rough(100000);
+    }
+}</code></pre>
+
+<p>如果连这个都不亮，那基本可以确定是硬件问题或者芯片根本没跑起来。</p>
+
+<h3>二、固件校验失败</h3>
+
+<p>Bootloader起来了，串口也打印了“开始校验”，然后给你来一句“Checksum Error”。</p>
+
+<p>为什么会这样？我总结了几种常见情况。</p>
+
+<h4>1. 校验算法不匹配</h4>
+
+<p>最常见的问题——上位机用的CRC32，Bootloader里算的是CRC16。或者多项式、初始值、输出异或值不一样。</p>
+
+<p>我建议：</p>
+<ul>
+  <li>上位机和Bootloader用同一套代码库里的CRC函数</li>
+  <li>测试时先用全0xFF、全0x00的数据块验证</li>
+  <li>打印出计算过程中的中间值，跟上位机比对</li>
+</ul>
+
+<div class="tip">
+  <strong>💡 小技巧：</strong> 我习惯在固件包的末尾附加一个“校验头”，里面不光有CRC值，还有固件长度、版本号、目标芯片ID。这样Bootloader可以一次性验证多个维度。
+</div>
+
+<h4>2. 传输过程丢包或错位</h4>
+
+<p>用串口升级时，波特率越高越容易丢包。我遇到过9600波特率稳如老狗，115200就时不时校验失败。</p>
+
+<p>排查方法：</p>
+<ul>
+  <li>在Bootloader里把收到的每个字节都打印出来（调试阶段）</li>
+  <li>对比上位机发送的原始数据，看有没有错位</li>
+  <li>检查流控（硬件流控还是软件XON/XOFF）</li>
+</ul>
+
+<p>嗯，这里要注意：有些USB转串口芯片在高速下会丢数据。我后来养成了习惯——量产固件升级统一用57600波特率，不高不低，稳。</p>
+
+<h4>3. Flash写入问题</h4>
+
+<p>校验失败还有一种可能——数据写进Flash后读出来变了。这通常是因为：</p>
+<ul>
+  <li>Flash写入前没有擦除（很多MCU要求先擦后写）</li>
+  <li>写入地址越界了，覆盖了Bootloader自身</li>
+  <li>Flash的等待周期设置不对，读出来全是乱码</li>
+</ul>
+
+<pre><code>// 一个典型的Flash写入流程（伪代码）
+uint32_t write_flash(uint32_t addr, uint8_t *data, uint32_t len) {
+    // 1. 解锁Flash
+    FLASH-&gt;KEYR = 0x45670123;
+    FLASH-&gt;KEYR = 0xCDEF89AB;
+    
+    // 2. 擦除扇区（必须！）
+    FLASH-&gt;SR |= FLASH_SR_EOP;  // 清除标志
+    FLASH-&gt;CR |= FLASH_CR_PER;  // 页擦除模式
+    FLASH-&gt;AR = addr;           // 设置地址
+    FLASH-&gt;CR |= FLASH_CR_STRT; // 开始擦除
+    while(!(FLASH-&gt;SR &amp; FLASH_SR_EOP)); // 等待完成
+    
+    // 3. 写入数据
+    for(uint32_t i = 0; i &lt; len; i += 2) {
+        while(!(FLASH-&gt;SR &amp; FLASH_SR_EOP));
+        *(volatile uint16_t*)(addr + i) = *(uint16_t*)(data + i);
+    }
+    
+    // 4. 读出验证
+    if(memcmp((void*)addr, data, len) != 0) {
+        return FLASH_ERROR_VERIFY;
+    }
+    return FLASH_OK;
+}</code></pre>
+
+<div class="highlight">
+  <strong>🔑 关键点：</strong> 写入后一定要做读出验证。我见过Flash写入时电压不稳导致数据写偏的案例，不验证根本发现不了。
+</div>
+
+<h3>三、跳转后程序跑飞</h3>
+
+<p>校验通过了，Bootloader也跳转到应用程序了，结果程序跑飞——要么进HardFault，要么啥反应没有。</p>
+
+<p>这个问题我调试过最久的一次，花了整整三天。最后发现原因简单得可笑。</p>
+
+<h4>1. 中断向量表没重映射</h4>
+
+<p>这是最最最常见的原因。Bootloader在0x08000000，应用程序在0x08010000。跳转前，必须把中断向量表基地址改到0x08010000。</p>
+
+<p>不同MCU做法不一样：</p>
+<ul>
+  <li><strong>Cortex-M3/M4</strong>：写SCB-&gt;VTOR寄存器</li>
+  <li><strong>某些国产MCU</strong>：可能没有VTOR，需要在链接脚本里固定向量表位置</li>
+  <li><strong>老架构</strong>：甚至需要自己写汇编跳转</li>
+</ul>
+
+<pre><code>// Cortex-M3/M4 跳转前的标准操作
+void jump_to_app(uint32_t app_addr) {
+    // 1. 关闭全局中断
+    __disable_irq();
+    
+    // 2. 关闭所有外设时钟（重要！）
+    RCC-&gt;AHBENR = 0;
+    RCC-&gt;APB1ENR = 0;
+    RCC-&gt;APB2ENR = 0;
+    
+    // 3. 重映射中断向量表
+    SCB-&gt;VTOR = app_addr;
+    
+    // 4. 设置主堆栈指针
+    __set_MSP(*(volatile uint32_t*)app_addr);
+    
+    // 5. 跳转到复位向量
+    void (*app_reset)(void) = (void (*)(void))(*(volatile uint32_t*)(app_addr + 4));
+    app_reset();
+}</code></pre>
+
+<div class="warning">
+  <strong>⚠️ 注意：</strong> 跳转前一定要关闭所有外设时钟！我遇到过跳转后UART还在发数据，结果跟应用程序的初始化冲突，直接卡死。
+</div>
+
+<h4>2. 堆栈指针没对齐</h4>
+
+<p>ARM Cortex-M要求堆栈指针必须4字节对齐，有些甚至要求8字节对齐。如果应用程序的链接脚本里堆栈地址没对齐，跳转后第一次压栈就崩了。</p>
+
+<p>检查方法：看应用程序的.map文件，确认__initial_sp的地址最后两位是0（4字节对齐）或000（8字节对齐）。</p>
+
+<h4>3. 外设状态残留</h4>
+
+<p>Bootloader里初始化了定时器、DMA、ADC，跳转前没清理干净。应用程序启动时，这些外设还在跑，中断一来，应用程序的中断向量表还没准备好——砰，跑飞。</p>
+
+<p>我建议的做法：</p>
+<ul>
+  <li>跳转前把所有用过的外设恢复到复位状态</li>
+  <li>关闭所有中断（包括NMI，如果可能的话）</li>
+  <li>清空所有挂起的中断标志</li>
+</ul>
+
+<h4>4. 链接脚本地址冲突</h4>
+
+<p>Bootloader和应用程序的链接脚本里，有没有重叠的区域？我见过一个案例：Bootloader占用了0x08000000-0x08007FFF，应用程序的ROM起始地址设成了0x08007000——重叠了2000字节。Bootloader跳转后，应用程序的代码把Bootloader的尾巴覆盖了，然后Bootloader的跳转代码本身也崩了。</p>
+
+<p>检查方法：</p>
+<ul>
+  <li>Bootloader的.map文件里，看最后使用的地址</li>
+  <li>应用程序的链接脚本里，ROM起始地址必须大于Bootloader结束地址</li>
+  <li>留出至少1KB的“安全缓冲区”</li>
+</ul>
+
+<h3>四、调试工具与技巧</h3>
+
+<p>最后分享几个我常用的调试手段：</p>
+
+<table>
+  <tr>
+    <th>问题类型</th>
+    <th>调试工具</th>
+    <th>我的经验</th>
+  </tr>
+  <tr>
+    <td>Bootloader不启动</td>
+    <td>示波器、逻辑分析仪</td>
+    <td>先看电源和复位，再看时钟，最后看GPIO</td>
+  </tr>
+  <tr>
+    <td>校验失败</td>
+    <td>串口打印、CRC计算器</td>
+    <td>把收到的每个包都打印出来，跟PC端比对</td>
+  </tr>
+  <tr>
+    <td>跳转跑飞</td>
+    <td>JTAG/SWD调试器</td>
+    <td>在跳转前设断点，单步进应用程序，看PC指针</td>
+  </tr>
+</table>
+
+<div class="tip">
+  <strong>💡 终极技巧：</strong> 在Bootloader里留一个“调试模式”。按住某个按键上电，Bootloader就不跳转，而是进入一个循环，不断打印关键寄存器的值。这个功能我几乎每个项目都加，调试时省了太多时间。
+</div>
+
+<p>好了，这一讲的内容就这些。这三个问题，说白了就是“起不来、验不过、跑不稳”。每个问题背后都有固定的排查路径，走熟了就不慌了。</p>
+
+<p>下一讲，咱们聊聊Bootloader的升级策略——怎么设计一个既安全又高效的升级流程。</p>
+        <div class="footer-nav">
+            <a href="25.html">← 上一章</a>
+            <a href="index.html">📖 返回目录</a>
+            <a href="27.html">下一章 →</a>
+        </div>
+        <footer>公众号:蓝海资料掘金营，微信deep3321</footer>
+    </div>
+</div>
+</div>
+</body>
+</html>

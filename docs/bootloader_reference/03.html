@@ -1,0 +1,314 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>第3章 开发环境搭建</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e9f0 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        /* 双边框设计：外边框 + 内阴影 */
+        .double-border {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #f1c40f;
+            border-radius: 24px;
+            box-shadow: 0 20px 30px -15px rgba(0,0,0,0.2), inset 0 1px 0 0 #fff8e0;
+            overflow: hidden;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+        }
+        .sidebar {
+            background: #fefcf5;
+            border-right: 2px solid #fdebb3;
+            padding: 24px 16px;
+        }
+        .sidebar h3 {
+            font-size: 1.4rem;
+            color: #b45f06;
+            border-left: 5px solid #f39c12;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+        .chapter-list {
+            list-style: none;
+        }
+        .chapter-list li {
+            margin-bottom: 6px;
+        }
+        .chapter-list a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #2c3e50;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .chapter-list a:hover {
+            background: #fdebd0;
+            transform: translateX(3px);
+        }
+        .chapter-list .active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 5px rgba(59,130,246,0.3);
+        }
+        .main-content {
+            padding: 30px 35px;
+            background: white;
+        }
+        .footer-nav {
+            margin-top: 45px;
+            padding-top: 20px;
+            border-top: 2px solid #f0e6d2;
+            display: flex;
+            justify-content: space-between;
+        }
+        .footer-nav a {
+            padding: 8px 24px;
+            background: #f1f5f9;
+            text-decoration: none;
+            color: #1e40af;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .footer-nav a:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #64748b;
+            border-top: 1px dashed #e2e8f0;
+            font-size: 0.9rem;
+        }
+        h2 { color: #1e3a8a; border-left: 6px solid #f59e0b; padding-left: 15px; margin: 20px 0 15px; }
+        h3 { color: #2c3e50; margin: 20px 0 10px; }
+        pre {
+            background: #2d2f36; color: #f8f8f2; padding: 15px; border-radius: 12px;
+            overflow-x: auto; font-family: 'JetBrains Mono', monospace; margin: 15px 0;
+        }
+        table {
+            width: 100%; border-collapse: collapse; margin: 15px 0; background: #fefce8;
+        }
+        th, td {
+            border: 1px solid #fcd34d; padding: 10px; text-align: left;
+        }
+        th { background: #fffbeb; }
+        .tip, .warning, .highlight {
+            padding: 12px 18px; border-radius: 16px; margin: 15px 0;
+        }
+        .tip { background: #e0f2fe; border-left: 6px solid #0ea5e9; }
+        .warning { background: #fee2e2; border-left: 6px solid #ef4444; }
+        .highlight { background: #fef9c3; border: 1px solid #facc15; }
+    </style>
+</head>
+<body>
+<div class="double-border">
+<div class="container">
+    <div class="sidebar">
+        <h3>📚 课程目录</h3>
+        <ul class="chapter-list">
+            <li><a href="01.html" class="">第1章 Bootloader入门</a></li>
+<li><a href="02.html" class="">第2章 嵌入式系统基础</a></li>
+<li><a href="03.html" class="active">第3章 开发环境搭建</a></li>
+<li><a href="04.html" class="">第4章 链接脚本深入</a></li>
+<li><a href="05.html" class="">第5章 启动代码分析</a></li>
+<li><a href="06.html" class="">第6章 中断向量表重映射</a></li>
+<li><a href="07.html" class="">第7章 Flash驱动开发</a></li>
+<li><a href="08.html" class="">第8章 串口通信协议</a></li>
+<li><a href="09.html" class="">第9章 固件包格式设计</a></li>
+<li><a href="10.html" class="">第10章 固件下载流程</a></li>
+<li><a href="11.html" class="">第11章 固件校验与完整性检查</a></li>
+<li><a href="12.html" class="">第12章 固件烧录与跳转</a></li>
+<li><a href="13.html" class="">第13章 双备份启动策略</a></li>
+<li><a href="14.html" class="">第14章 看门狗与异常处理</a></li>
+<li><a href="15.html" class="">第15章 固件加密与安全启动</a></li>
+<li><a href="16.html" class="">第16章 OTA升级原理</a></li>
+<li><a href="17.html" class="">第17章 Bootloader与APP交互</a></li>
+<li><a href="18.html" class="">第18章 多分区管理</a></li>
+<li><a href="19.html" class="">第19章 命令行接口(CLI)开发</a></li>
+<li><a href="20.html" class="">第20章 日志系统设计</a></li>
+<li><a href="21.html" class="">第21章 性能优化</a></li>
+<li><a href="22.html" class="">第22章 低功耗模式</a></li>
+<li><a href="23.html" class="">第23章 外设驱动封装</a></li>
+<li><a href="24.html" class="">第24章 单元测试与模拟</a></li>
+<li><a href="25.html" class="">第25章 硬件调试技巧</a></li>
+<li><a href="26.html" class="">第26章 常见问题排查</a></li>
+<li><a href="27.html" class="">第27章 RTOS集成</a></li>
+<li><a href="28.html" class="">第28章 量产烧录方案</a></li>
+<li><a href="29.html" class="">第29章 安全防护</a></li>
+<li><a href="30.html" class="">第30章 项目实战</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <h2>第三章 开发环境搭建：Keil MDK安装与配置、GCC工具链搭建、调试器（J-Link/ST-Link）使用</h2>
+
+<p>好，咱们进入第三章。说实话，Bootloader开发这件事，七分靠思路，三分靠工具。环境没搭好，后面全是坑。我见过太多新手，代码写得挺漂亮，结果一烧录就黑屏，最后发现是编译器版本不对。所以这一章，咱们把吃饭的家伙先收拾利索。</p>
+
+<h3>3.1 Keil MDK：老牌IDE的安装与配置</h3>
+
+<p>Keil MDK，圈内俗称“Keil”，是ARM Cortex-M系列开发的事实标准。我个人习惯用它做原型验证，因为上手快，调试信息直观。</p>
+
+<h4>3.1.1 安装步骤</h4>
+<ol>
+  <li><strong>下载安装包</strong>：去ARM官网或Keil官网，找MDK-Arm最新版。注意区分32位和64位。</li>
+  <li><strong>运行安装程序</strong>：一路Next，但<strong>安装路径不要有中文</strong>。我曾经帮一个同事排查问题，折腾了两小时，最后发现他装在了“D:\开发工具\Keil_v5”……嗯，中文路径在编译链接时偶尔会抽风。</li>
+  <li><strong>激活License</strong>：安装完后打开uVision，点击File → License Management。如果你有正版License，直接粘贴；如果是评估版，注意代码大小限制（通常32KB）。做Bootloader的话，32KB其实够用，但别超了。</li>
+  <li><strong>安装器件包（Pack）</strong>：点击Pack Installer，找到你的芯片型号。比如STM32F103，勾选并安装。这一步很多人忘，结果编译时报“device not found”。</li>
+</ol>
+
+<div class="warning">
+  <strong>注意：</strong>Keil MDK版本和器件包版本要匹配。MDK 5.36以上对某些老芯片支持有问题。我建议：做新项目用最新版，维护老项目用稳定版（比如5.33）。
+</div>
+
+<h4>3.1.2 工程配置要点</h4>
+<p>新建工程时，有几个关键地方要设对：</p>
+<ul>
+  <li><strong>Target选项卡</strong>：ARM Compiler选“Use default compiler version 6”或“V5”。V6编译快，但V5兼容性好。做Bootloader我推荐V5，因为有些底层汇编指令V6不支持。</li>
+  <li><strong>Output选项卡</strong>：勾选“Create HEX File”。Bootloader最终烧录的是HEX或BIN文件，不勾选你烧什么？</li>
+  <li><strong>C/C++选项卡</strong>：Optimization选“Level 0 (-O0)”。调试阶段别开优化，否则单步执行时变量值可能“凭空消失”。</li>
+</ul>
+
+<div class="tip">
+  <strong>小技巧：</strong>在“C/C++”选项卡的“Define”里加上“USE_STDPERIPH_DRIVER”。这是标准外设库的宏定义，不加的话，很多外设函数会报未定义。
+</div>
+
+<h3>3.2 GCC工具链：开源世界的自由与力量</h3>
+<p>Keil虽好，但它是收费的。如果你做开源项目，或者想跨平台开发（比如在Linux下写Bootloader），GCC工具链是首选。说白了，GCC就是编译器界的Linux——免费、强大、但需要自己折腾。</p>
+
+<h4>3.2.1 搭建ARM GCC工具链</h4>
+<p>我推荐用ARM官方的“GNU Arm Embedded Toolchain”。下载后解压到某个目录，比如<code>C:\gcc-arm-none-eabi</code>。然后配置环境变量：</p>
+<pre><code># Windows下
+set PATH=%PATH%;C:\gcc-arm-none-eabi\bin
+
+# Linux下
+export PATH=$PATH:/opt/gcc-arm-none-eabi/bin</code></pre>
+<p>验证是否成功：打开终端，输入<code>arm-none-eabi-gcc --version</code>。如果看到版本号，说明成了。</p>
+
+<div class="highlight">
+  <p><strong>避坑指南：</strong>我曾经在Windows下用GCC编译一个Bootloader，结果链接时报“undefined reference to __main”。查了半天，发现是启动文件里调用了C库初始化函数，但GCC的链接脚本没包含对应的库。解决方案：在链接脚本里加上<code>--specs=nano.specs</code>和<code>--specs=nosys.specs</code>。</p>
+</div>
+
+<h4>3.2.2 Makefile编写示例</h4>
+<p>用GCC开发，通常配合Makefile。下面是一个最小化的Makefile模板：</p>
+<pre><code># 工具链前缀
+PREFIX = arm-none-eabi-
+CC = $(PREFIX)gcc
+LD = $(PREFIX)ld
+OBJCOPY = $(PREFIX)objcopy
+
+# 编译选项
+CFLAGS = -mcpu=cortex-m3 -mthumb -O0 -g -Wall
+LDFLAGS = -T linker.ld -nostartfiles
+
+# 源文件
+SRCS = main.c startup.c
+OBJS = $(SRCS:.c=.o)
+
+# 目标
+all: bootloader.elf bootloader.bin
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $&lt; -o $@
+
+bootloader.elf: $(OBJS)
+	$(LD) $(LDFLAGS) $^ -o $@
+
+bootloader.bin: bootloader.elf
+	$(OBJCOPY) -O binary $&lt; $@
+
+clean:
+	rm -f *.o *.elf *.bin</code></pre>
+<p>你想想看，这个Makefile其实就干了三件事：编译、链接、生成二进制。但很多新手会卡在链接脚本（linker.ld）上。嗯，链接脚本决定了代码段、数据段放在哪里，对Bootloader来说至关重要。我们后面会专门讲。</p>
+
+<h3>3.3 调试器：J-Link与ST-Link的使用</h3>
+<p>调试器是开发者的眼睛。没有它，你只能靠printf猜问题。我个人更偏爱J-Link，因为它速度快、功能全。但ST-Link免费，配合STM32CubeIDE用也很香。</p>
+
+<h4>3.3.1 J-Link：专业调试利器</h4>
+<p>J-Link是SEGGER公司的产品。安装驱动后，连接开发板，打开J-Link Commander：</p>
+<pre><code>J-Link&gt; connect
+Device&gt; STM32F103C8
+Target interface&gt; SWD
+Speed&gt; 4000
+Connecting to target... OK</code></pre>
+<p>连接成功后，你可以用<code>loadbin</code>命令烧录二进制文件：</p>
+<pre><code>J-Link&gt; loadbin bootloader.bin 0x08000000</code></pre>
+
+<div class="warning">
+  <strong>注意：</strong>J-Link的SWD速度别设太高。我遇到过在4000kHz下调试正常，但一上电就跑飞的情况。后来降到1000kHz就稳了。原因可能是线太长或干扰。
+</div>
+
+<h4>3.3.2 ST-Link：STM32的官方搭档</h4>
+<p>ST-Link集成在Nucleo和Discovery板上，也可以单独买。使用ST-Link需要安装STM32CubeProgrammer或OpenOCD。我个人习惯用OpenOCD，因为它开源且支持脚本化：</p>
+<pre><code># 烧录命令
+openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c "program bootloader.bin 0x08000000 verify reset exit"</code></pre>
+<p>这里<code>verify</code>参数会校验烧录是否正确。我曾经有一次烧录后芯片不工作，就是靠verify发现某个地址写错了——原来是链接脚本里Flash起始地址设成了0x08001000，但实际应该从0x08000000开始。</p>
+
+<h4>3.3.3 调试器对比</h4>
+<table>
+  <tr>
+    <th>特性</th>
+    <th>J-Link</th>
+    <th>ST-Link</th>
+  </tr>
+  <tr>
+    <td>速度</td>
+    <td>最高50MHz</td>
+    <td>最高4MHz</td>
+  </tr>
+  <tr>
+    <td>断点数量</td>
+    <td>无限（硬件+软件）</td>
+    <td>6个硬件断点</td>
+  </tr>
+  <tr>
+    <td>价格</td>
+    <td>几百到几千元</td>
+    <td>几十元（或免费随板）</td>
+  </tr>
+  <tr>
+    <td>适用场景</td>
+    <td>复杂调试、性能分析</td>
+    <td>日常开发、学习</td>
+  </tr>
+</table>
+<p>怎么选？如果你只是学Bootloader，ST-Link完全够用。但如果你要做RTOS调试、Trace分析，J-Link的RTT和Event Recorder功能会让你爱不释手。</p>
+
+<h3>3.4 环境验证：烧录一个点灯程序</h3>
+<p>环境搭没搭好，跑个点灯程序就知道了。我建议你写一个最简单的Bootloader雏形——其实就是让LED闪烁，但通过调试器单步执行，观察寄存器变化。具体步骤：</p>
+<ol>
+  <li>用Keil或GCC编译一个点灯程序，生成HEX文件。</li>
+  <li>用J-Link或ST-Link烧录到Flash的0x08000000地址。</li>
+  <li>复位开发板，看LED是否闪烁。</li>
+  <li>如果没亮，检查接线、调试器驱动、烧录地址。</li>
+</ol>
+
+<div class="tip">
+  <strong>我的经验：</strong>第一次烧录时，别急着写复杂逻辑。先确认“最小系统”能跑起来——时钟配置、GPIO初始化、延时函数。这三个对了，Bootloader的骨架就有了。
+</div>
+
+<p>好了，环境搭建就到这里。下一章咱们正式进入Bootloader的核心——启动流程分析。到时候你会明白，为什么环境搭建这么重要——因为调试Bootloader时，每一步都可能踩坑，而好的工具能帮你快速定位问题。</p>
+        <div class="footer-nav">
+            <a href="02.html">← 上一章</a>
+            <a href="index.html">📖 返回目录</a>
+            <a href="04.html">下一章 →</a>
+        </div>
+        <footer>公众号:蓝海资料掘金营，微信deep3321</footer>
+    </div>
+</div>
+</div>
+</body>
+</html>

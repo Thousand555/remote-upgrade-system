@@ -1,0 +1,308 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>第10章 固件下载流程</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e9f0 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        /* 双边框设计：外边框 + 内阴影 */
+        .double-border {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #f1c40f;
+            border-radius: 24px;
+            box-shadow: 0 20px 30px -15px rgba(0,0,0,0.2), inset 0 1px 0 0 #fff8e0;
+            overflow: hidden;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+        }
+        .sidebar {
+            background: #fefcf5;
+            border-right: 2px solid #fdebb3;
+            padding: 24px 16px;
+        }
+        .sidebar h3 {
+            font-size: 1.4rem;
+            color: #b45f06;
+            border-left: 5px solid #f39c12;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+        .chapter-list {
+            list-style: none;
+        }
+        .chapter-list li {
+            margin-bottom: 6px;
+        }
+        .chapter-list a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #2c3e50;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .chapter-list a:hover {
+            background: #fdebd0;
+            transform: translateX(3px);
+        }
+        .chapter-list .active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 5px rgba(59,130,246,0.3);
+        }
+        .main-content {
+            padding: 30px 35px;
+            background: white;
+        }
+        .footer-nav {
+            margin-top: 45px;
+            padding-top: 20px;
+            border-top: 2px solid #f0e6d2;
+            display: flex;
+            justify-content: space-between;
+        }
+        .footer-nav a {
+            padding: 8px 24px;
+            background: #f1f5f9;
+            text-decoration: none;
+            color: #1e40af;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .footer-nav a:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #64748b;
+            border-top: 1px dashed #e2e8f0;
+            font-size: 0.9rem;
+        }
+        h2 { color: #1e3a8a; border-left: 6px solid #f59e0b; padding-left: 15px; margin: 20px 0 15px; }
+        h3 { color: #2c3e50; margin: 20px 0 10px; }
+        pre {
+            background: #2d2f36; color: #f8f8f2; padding: 15px; border-radius: 12px;
+            overflow-x: auto; font-family: 'JetBrains Mono', monospace; margin: 15px 0;
+        }
+        table {
+            width: 100%; border-collapse: collapse; margin: 15px 0; background: #fefce8;
+        }
+        th, td {
+            border: 1px solid #fcd34d; padding: 10px; text-align: left;
+        }
+        th { background: #fffbeb; }
+        .tip, .warning, .highlight {
+            padding: 12px 18px; border-radius: 16px; margin: 15px 0;
+        }
+        .tip { background: #e0f2fe; border-left: 6px solid #0ea5e9; }
+        .warning { background: #fee2e2; border-left: 6px solid #ef4444; }
+        .highlight { background: #fef9c3; border: 1px solid #facc15; }
+    </style>
+</head>
+<body>
+<div class="double-border">
+<div class="container">
+    <div class="sidebar">
+        <h3>📚 课程目录</h3>
+        <ul class="chapter-list">
+            <li><a href="01.html" class="">第1章 Bootloader入门</a></li>
+<li><a href="02.html" class="">第2章 嵌入式系统基础</a></li>
+<li><a href="03.html" class="">第3章 开发环境搭建</a></li>
+<li><a href="04.html" class="">第4章 链接脚本深入</a></li>
+<li><a href="05.html" class="">第5章 启动代码分析</a></li>
+<li><a href="06.html" class="">第6章 中断向量表重映射</a></li>
+<li><a href="07.html" class="">第7章 Flash驱动开发</a></li>
+<li><a href="08.html" class="">第8章 串口通信协议</a></li>
+<li><a href="09.html" class="">第9章 固件包格式设计</a></li>
+<li><a href="10.html" class="active">第10章 固件下载流程</a></li>
+<li><a href="11.html" class="">第11章 固件校验与完整性检查</a></li>
+<li><a href="12.html" class="">第12章 固件烧录与跳转</a></li>
+<li><a href="13.html" class="">第13章 双备份启动策略</a></li>
+<li><a href="14.html" class="">第14章 看门狗与异常处理</a></li>
+<li><a href="15.html" class="">第15章 固件加密与安全启动</a></li>
+<li><a href="16.html" class="">第16章 OTA升级原理</a></li>
+<li><a href="17.html" class="">第17章 Bootloader与APP交互</a></li>
+<li><a href="18.html" class="">第18章 多分区管理</a></li>
+<li><a href="19.html" class="">第19章 命令行接口(CLI)开发</a></li>
+<li><a href="20.html" class="">第20章 日志系统设计</a></li>
+<li><a href="21.html" class="">第21章 性能优化</a></li>
+<li><a href="22.html" class="">第22章 低功耗模式</a></li>
+<li><a href="23.html" class="">第23章 外设驱动封装</a></li>
+<li><a href="24.html" class="">第24章 单元测试与模拟</a></li>
+<li><a href="25.html" class="">第25章 硬件调试技巧</a></li>
+<li><a href="26.html" class="">第26章 常见问题排查</a></li>
+<li><a href="27.html" class="">第27章 RTOS集成</a></li>
+<li><a href="28.html" class="">第28章 量产烧录方案</a></li>
+<li><a href="29.html" class="">第29章 安全防护</a></li>
+<li><a href="30.html" class="">第30章 项目实战</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <h2>10、固件下载流程：握手协议设计、数据分包传输、超时重传机制</h2>
+
+<p>固件下载，说白了就是给设备“灌程序”。</p>
+<p>你想想看，一个刚从产线下来的芯片，里面空空如也，Bootloader 就是那个负责把固件从外面搬进来的“搬运工”。这个搬运过程，可不是简单的复制粘贴。它需要一套严谨的流程，确保数据准确无误地到达目的地。</p>
+<p>我个人习惯把固件下载分成三个核心环节：<strong>握手</strong>、<strong>传输</strong>、<strong>校验</strong>。今天我们就重点聊聊前两个，以及那个让人又爱又恨的“超时重传”。</p>
+
+<h3>10.1 握手协议设计：先打个招呼</h3>
+
+<p>握手，就是设备和上位机（比如你的 PC）互相确认身份的过程。我在项目中遇到过最尴尬的事，就是上位机对着一个还没初始化的设备狂发数据，设备那边一脸懵，根本不搭理。</p>
+<p>所以，握手协议要解决两个问题：</p>
+<ul>
+    <li><strong>你是谁？</strong> 确认设备型号、Bootloader 版本。</li>
+    <li><strong>准备好了吗？</strong> 确认设备当前状态，是否可以接收数据。</li>
+</ul>
+
+<p>一个典型的握手流程是这样的：</p>
+<ol>
+    <li>上位机发送一个特定的握手命令，比如 <code>0xAA 0x55</code>。</li>
+    <li>设备收到后，回复自己的设备 ID 和 Bootloader 版本号。</li>
+    <li>上位机验证这些信息，如果匹配，就发送“开始下载”指令。</li>
+    <li>设备回复“ACK”，表示准备好了。</li>
+</ol>
+
+<div class="highlight">
+    <p><strong>关键点：</strong>握手命令要足够“冷门”，避免和正常数据冲突。我习惯用 <code>0xAA 0x55 0x01</code> 这种三字节序列，降低误触发的概率。</p>
+</div>
+
+<p>这里有个小坑：有些设备上电后，IO 口状态不确定。我曾经遇到过握手命令被误判为外部中断的情况。嗯，这里要注意，握手前最好先让设备进入一个“监听”状态，比如等待 100ms 再开始握手。</p>
+
+<h3>10.2 数据分包传输：大块肉要切着吃</h3>
+
+<p>固件文件动辄几百 KB，甚至几 MB。一次传完？不现实。一来缓冲区没那么大，二来万一传错了，重传整个文件代价太高。</p>
+<p>所以，我们要把固件切成一个个小包。每个包的大小，取决于你的硬件资源。我常用的包大小是 256 字节或 512 字节。为什么？因为很多 Flash 的页大小就是 256 字节，这样一包数据正好写一页，效率最高。</p>
+
+<p>每个数据包的结构，我建议这样设计：</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>字段</th>
+            <th>长度（字节）</th>
+            <th>说明</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>包起始符</td>
+            <td>2</td>
+            <td>比如 <code>0xAA 0x55</code>，用于同步</td>
+        </tr>
+        <tr>
+            <td>包序号</td>
+            <td>2</td>
+            <td>从 0 开始，用于排序和重传</td>
+        </tr>
+        <tr>
+            <td>数据长度</td>
+            <td>2</td>
+            <td>本包有效数据的字节数</td>
+        </tr>
+        <tr>
+            <td>数据内容</td>
+            <td>N</td>
+            <td>实际的固件数据</td>
+        </tr>
+        <tr>
+            <td>校验和</td>
+            <td>1 或 2</td>
+            <td>CRC 或简单的累加和</td>
+        </tr>
+    </tbody>
+</table>
+
+<p>你可能会问：“包序号为什么要 2 字节？” 因为如果固件很大，256 个包可能不够用。2 字节可以支持 65536 个包，每个包 256 字节，算下来能支持 16MB 的固件，足够了。</p>
+
+<div class="tip">
+    <p><strong>我的习惯：</strong>校验和用 CRC16，虽然计算量比累加和大一点，但检错能力更强。对于 Bootloader 这种“一次失败可能变砖”的场景，这点开销值得。</p>
+</div>
+
+<h3>10.3 超时重传机制：别让设备死等</h3>
+
+<p>数据传输过程中，丢包是难免的。可能是线路干扰，可能是上位机卡顿，也可能是设备正在擦除 Flash 没来得及回复。</p>
+<p>超时重传机制，就是为了解决这个问题。说白了就是：<strong>如果发送方没收到确认，就认为包丢了，重新发一次。</strong></p>
+
+<p>具体怎么设计？我一般分两步：</p>
+
+<h4>10.3.1 发送方超时</h4>
+<p>上位机每发送一个数据包，就启动一个定时器。比如设置 100ms 的超时时间。</p>
+<ul>
+    <li>如果在 100ms 内收到设备的 ACK，就发送下一个包。</li>
+    <li>如果超时了还没收到，就重发当前包。</li>
+    <li>重发次数有限制，比如 3 次。超过 3 次，就报错退出。</li>
+</ul>
+
+<h4>10.3.2 接收方超时</h4>
+<p>设备端也要有超时机制。比如，设备收到一个包后，开始等待下一个包。如果超过 500ms 没收到任何数据，就认为传输中断，自动退出下载模式，回到 Bootloader 主循环。</p>
+
+<div class="warning">
+    <p><strong>我曾经踩过的坑：</strong>超时时间设得太短。有一次我把发送超时设为 10ms，结果设备在擦除 Flash 时花了 50ms，导致每个包都重传了 3 次，下载速度慢得像蜗牛。后来我把超时时间调整为 200ms，问题就解决了。</p>
+    <p>记住：超时时间要大于设备处理一个包的最大耗时，包括擦除、写入、校验的时间。</p>
+</div>
+
+<p>这里有个细节：重传时，包序号不变。设备收到重复的包序号，应该直接丢弃，并回复 ACK。为什么？因为设备可能已经正确接收了，只是 ACK 丢了。如果设备不回复 ACK，上位机就会一直重传，陷入死循环。</p>
+
+<h3>10.4 一个简单的代码示例</h3>
+
+<p>下面是一个简化的发送端伪代码，展示了超时重传的核心逻辑：</p>
+
+<pre><code>// 发送一个数据包，带超时重传
+int send_packet(uint8_t *data, uint16_t len, uint16_t seq) {
+    uint8_t retry_count = 0;
+    uint8_t ack;
+
+    while (retry_count &lt; MAX_RETRY) {
+        // 1. 发送数据包
+        uart_send_bytes(data, len);
+
+        // 2. 等待 ACK，超时 100ms
+        if (uart_wait_ack(&amp;ack, 100) == SUCCESS) {
+            if (ack == ACK_OK) {
+                return SUCCESS;  // 发送成功
+            }
+        }
+
+        // 3. 超时或收到 NAK，重试
+        retry_count++;
+        printf("重传第 %d 次，包序号 %d\n", retry_count, seq);
+    }
+
+    // 4. 重试次数耗尽，返回失败
+    return FAILURE;
+}
+</code></pre>
+
+<p>这段代码虽然简单，但已经包含了超时重传的核心思想。实际项目中，你还需要考虑缓冲区管理、流控等问题。</p>
+
+<h3>10.5 总结一下</h3>
+
+<p>固件下载流程，其实就是一个“可靠传输”的问题。握手协议解决了“谁和谁通信”的问题，分包传输解决了“怎么传”的问题，超时重传解决了“传丢了怎么办”的问题。</p>
+<p>我个人觉得，这三个环节里，超时重传是最容易出问题的。时间设短了，效率低；设长了，用户体验差。我的建议是：<strong>先根据硬件性能估算一个值，然后在实际测试中微调。</strong></p>
+<p>嗯，今天就聊到这里。下一章我们会聊聊固件校验和签名，这可是防止“变砖”的最后一道防线。</p>
+        <div class="footer-nav">
+            <a href="09.html">← 上一章</a>
+            <a href="index.html">📖 返回目录</a>
+            <a href="11.html">下一章 →</a>
+        </div>
+        <footer>公众号:蓝海资料掘金营，微信deep3321</footer>
+    </div>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,407 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>第19章 命令行接口(CLI)开发</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e9f0 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        /* 双边框设计：外边框 + 内阴影 */
+        .double-border {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #f1c40f;
+            border-radius: 24px;
+            box-shadow: 0 20px 30px -15px rgba(0,0,0,0.2), inset 0 1px 0 0 #fff8e0;
+            overflow: hidden;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+        }
+        .sidebar {
+            background: #fefcf5;
+            border-right: 2px solid #fdebb3;
+            padding: 24px 16px;
+        }
+        .sidebar h3 {
+            font-size: 1.4rem;
+            color: #b45f06;
+            border-left: 5px solid #f39c12;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+        .chapter-list {
+            list-style: none;
+        }
+        .chapter-list li {
+            margin-bottom: 6px;
+        }
+        .chapter-list a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #2c3e50;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .chapter-list a:hover {
+            background: #fdebd0;
+            transform: translateX(3px);
+        }
+        .chapter-list .active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 5px rgba(59,130,246,0.3);
+        }
+        .main-content {
+            padding: 30px 35px;
+            background: white;
+        }
+        .footer-nav {
+            margin-top: 45px;
+            padding-top: 20px;
+            border-top: 2px solid #f0e6d2;
+            display: flex;
+            justify-content: space-between;
+        }
+        .footer-nav a {
+            padding: 8px 24px;
+            background: #f1f5f9;
+            text-decoration: none;
+            color: #1e40af;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .footer-nav a:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #64748b;
+            border-top: 1px dashed #e2e8f0;
+            font-size: 0.9rem;
+        }
+        h2 { color: #1e3a8a; border-left: 6px solid #f59e0b; padding-left: 15px; margin: 20px 0 15px; }
+        h3 { color: #2c3e50; margin: 20px 0 10px; }
+        pre {
+            background: #2d2f36; color: #f8f8f2; padding: 15px; border-radius: 12px;
+            overflow-x: auto; font-family: 'JetBrains Mono', monospace; margin: 15px 0;
+        }
+        table {
+            width: 100%; border-collapse: collapse; margin: 15px 0; background: #fefce8;
+        }
+        th, td {
+            border: 1px solid #fcd34d; padding: 10px; text-align: left;
+        }
+        th { background: #fffbeb; }
+        .tip, .warning, .highlight {
+            padding: 12px 18px; border-radius: 16px; margin: 15px 0;
+        }
+        .tip { background: #e0f2fe; border-left: 6px solid #0ea5e9; }
+        .warning { background: #fee2e2; border-left: 6px solid #ef4444; }
+        .highlight { background: #fef9c3; border: 1px solid #facc15; }
+    </style>
+</head>
+<body>
+<div class="double-border">
+<div class="container">
+    <div class="sidebar">
+        <h3>📚 课程目录</h3>
+        <ul class="chapter-list">
+            <li><a href="01.html" class="">第1章 Bootloader入门</a></li>
+<li><a href="02.html" class="">第2章 嵌入式系统基础</a></li>
+<li><a href="03.html" class="">第3章 开发环境搭建</a></li>
+<li><a href="04.html" class="">第4章 链接脚本深入</a></li>
+<li><a href="05.html" class="">第5章 启动代码分析</a></li>
+<li><a href="06.html" class="">第6章 中断向量表重映射</a></li>
+<li><a href="07.html" class="">第7章 Flash驱动开发</a></li>
+<li><a href="08.html" class="">第8章 串口通信协议</a></li>
+<li><a href="09.html" class="">第9章 固件包格式设计</a></li>
+<li><a href="10.html" class="">第10章 固件下载流程</a></li>
+<li><a href="11.html" class="">第11章 固件校验与完整性检查</a></li>
+<li><a href="12.html" class="">第12章 固件烧录与跳转</a></li>
+<li><a href="13.html" class="">第13章 双备份启动策略</a></li>
+<li><a href="14.html" class="">第14章 看门狗与异常处理</a></li>
+<li><a href="15.html" class="">第15章 固件加密与安全启动</a></li>
+<li><a href="16.html" class="">第16章 OTA升级原理</a></li>
+<li><a href="17.html" class="">第17章 Bootloader与APP交互</a></li>
+<li><a href="18.html" class="">第18章 多分区管理</a></li>
+<li><a href="19.html" class="active">第19章 命令行接口(CLI)开发</a></li>
+<li><a href="20.html" class="">第20章 日志系统设计</a></li>
+<li><a href="21.html" class="">第21章 性能优化</a></li>
+<li><a href="22.html" class="">第22章 低功耗模式</a></li>
+<li><a href="23.html" class="">第23章 外设驱动封装</a></li>
+<li><a href="24.html" class="">第24章 单元测试与模拟</a></li>
+<li><a href="25.html" class="">第25章 硬件调试技巧</a></li>
+<li><a href="26.html" class="">第26章 常见问题排查</a></li>
+<li><a href="27.html" class="">第27章 RTOS集成</a></li>
+<li><a href="28.html" class="">第28章 量产烧录方案</a></li>
+<li><a href="29.html" class="">第29章 安全防护</a></li>
+<li><a href="30.html" class="">第30章 项目实战</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <h2>第19章 命令行接口(CLI)开发：CLI框架设计、命令解析器实现、调试命令扩展</h2>
+
+<p>说到Bootloader的调试，我最常用的工具就是命令行接口。你想想看，一个嵌入式系统刚上电，没有操作系统，没有图形界面，你怎么跟它交互？串口命令行就是最直接的方式。我在做第一个Bootloader项目时，就深刻体会到了CLI的重要性——没有它，调试就像在黑暗中摸索。</p>
+
+<h3>19.1 CLI框架设计</h3>
+
+<p>CLI框架说白了就是一套"命令处理流水线"。它要完成三件事：接收输入、解析命令、执行动作。我习惯把框架分成三层：</p>
+
+<ul>
+  <li><strong>输入层</strong>：负责从串口读取字符，处理回显、退格等基础操作</li>
+  <li><strong>解析层</strong>：将字符串拆解成命令和参数</li>
+  <li><strong>执行层</strong>：根据解析结果调用对应的处理函数</li>
+</ul>
+
+<p>先看一个最简的框架设计：</p>
+
+<pre><code>/* CLI命令结构体 */
+typedef struct {
+    const char *name;        /* 命令名称 */
+    const char *help;        /* 帮助信息 */
+    int (*handler)(int argc, char *argv[]);  /* 处理函数 */
+} cli_cmd_t;
+
+/* CLI控制块 */
+typedef struct {
+    char rx_buf[256];        /* 接收缓冲区 */
+    uint16_t rx_len;         /* 已接收长度 */
+    cli_cmd_t *cmd_table;    /* 命令表 */
+    uint32_t cmd_count;      /* 命令数量 */
+} cli_ctrl_t;</code></pre>
+
+<p>嗯，这里要注意缓冲区大小。我遇到过有人只给32字节，结果一条长命令直接溢出，系统崩溃。建议至少256字节，如果命令复杂，512字节更稳妥。</p>
+
+<h3>19.2 命令解析器实现</h3>
+
+<p>命令解析器是CLI的核心。它的工作就是把"erase 0x08010000 0x10000"这样的字符串，解析成argc=3，argv[0]="erase"，argv[1]="0x08010000"，argv[2]="0x10000"。</p>
+
+<p>我个人习惯用空格作为分隔符，简单可靠。解析流程如下：</p>
+
+<ol>
+  <li>跳过行首空白字符</li>
+  <li>找到下一个空白字符，截取一个token</li>
+  <li>重复直到字符串结束</li>
+  <li>统计token数量作为argc</li>
+</ol>
+
+<pre><code>static int cli_parse(char *line, int *argc, char *argv[], int max_args)
+{
+    char *p = line;
+    int count = 0;
+
+    while (*p) {
+        /* 跳过空白 */
+        while (*p == ' ' || *p == '\t')
+            p++;
+
+        if (*p == '\0')
+            break;
+
+        if (count >= max_args)
+            return -1;  /* 参数太多 */
+
+        argv[count++] = p;
+
+        /* 找到下一个空白 */
+        while (*p && *p != ' ' && *p != '\t')
+            p++;
+
+        if (*p) {
+            *p = '\0';  /* 字符串截断 */
+            p++;
+        }
+    }
+
+    *argc = count;
+    return 0;
+}</code></pre>
+
+<p>我曾经在解析时犯过一个低级错误——没处理连续空格。结果用户输入"erase 0x08010000 0x10000"（多个空格），解析出来的参数全乱了。所以上面的代码里，我用了两个while循环来跳过空白，确保不管多少个空格都能正确处理。</p>
+
+<h3>19.3 命令匹配与执行</h3>
+
+<p>解析完成后，就要在命令表中查找匹配的命令。我建议用线性查找，因为Bootloader的命令通常不超过20个，没必要搞哈希表。</p>
+
+<pre><code>static int cli_execute(cli_ctrl_t *ctrl, int argc, char *argv[])
+{
+    for (uint32_t i = 0; i &lt; ctrl-&gt;cmd_count; i++) {
+        if (strcmp(argv[0], ctrl-&gt;cmd_table[i].name) == 0) {
+            return ctrl-&gt;cmd_table[i].handler(argc, argv);
+        }
+    }
+
+    printf("Error: unknown command '%s'\n", argv[0]);
+    return -1;
+}</code></pre>
+
+<p>这里有个小技巧：支持命令缩写。比如"help"可以缩写成"h"，"erase"缩写成"e"。实现方式很简单，比较时用<code>strncmp</code>代替<code>strcmp</code>，但要注意避免歧义。我建议只对常用命令做缩写，而且缩写长度至少3个字符。</p>
+
+<div class="highlight">
+  <p><strong>核心要点</strong>：命令匹配时，先精确匹配，再尝试模糊匹配。如果模糊匹配有多个结果，报错提示用户。</p>
+</div>
+
+<h3>19.4 调试命令扩展</h3>
+
+<p>调试命令是CLI最有价值的部分。我一般会提供以下几类：</p>
+
+<table>
+  <tr>
+    <th>命令类别</th>
+    <th>示例命令</th>
+    <th>用途</th>
+  </tr>
+  <tr>
+    <td>内存操作</td>
+    <td>md, mw, mm</td>
+    <td>查看/修改内存内容</td>
+  </tr>
+  <tr>
+    <td>Flash操作</td>
+    <td>erase, write, protect</td>
+    <td>擦除/写入/保护Flash</td>
+  </tr>
+  <tr>
+    <td>寄存器操作</td>
+    <td>reg, setreg</td>
+    <td>读写CPU外设寄存器</td>
+  </tr>
+  <tr>
+    <td>系统信息</td>
+    <td>info, version, reset</td>
+    <td>查看系统状态、重启</td>
+  </tr>
+  <tr>
+    <td>测试命令</td>
+    <td>test_ram, test_flash</td>
+    <td>硬件自检</td>
+  </tr>
+</table>
+
+<p>以内存显示命令为例，实现起来很直观：</p>
+
+<pre><code>static int cmd_memory_dump(int argc, char *argv[])
+{
+    uint32_t addr, len;
+
+    if (argc &lt; 3) {
+        printf("Usage: md &lt;addr&gt; &lt;len&gt;\n");
+        return -1;
+    }
+
+    addr = strtoul(argv[1], NULL, 16);
+    len  = strtoul(argv[2], NULL, 16);
+
+    for (uint32_t i = 0; i &lt; len; i += 16) {
+        printf("%08X: ", addr + i);
+        for (int j = 0; j &lt; 16; j++) {
+            if (i + j &lt; len)
+                printf("%02X ", *(uint8_t *)(addr + i + j));
+            else
+                printf("   ");
+        }
+        printf("\n");
+    }
+
+    return 0;
+}</code></pre>
+
+<div class="tip">
+  <p><strong>经验之谈</strong>：调试命令一定要加保护。比如内存dump时，如果地址是NULL或者超出RAM范围，直接返回错误。我曾经在客户现场调试，一条"md 0 100"命令直接导致系统挂死——因为地址0是中断向量表，读着读着就触发异常了。</p>
+</div>
+
+<h3>19.5 历史记录与行编辑</h3>
+
+<p>一个好用的CLI还得支持历史记录和行编辑。历史记录用环形缓冲区实现，保存最近10-20条命令。行编辑支持退格、左右移动、插入删除。</p>
+
+<p>实现行编辑时，我建议用ANSI转义序列。比如收到0x1B 0x5B 0x41（上箭头），就显示上一条历史命令。代码大概这样：</p>
+
+<pre><code>static void cli_process_char(cli_ctrl_t *ctrl, char ch)
+{
+    if (ch == '\r' || ch == '\n') {
+        /* 回车：执行命令 */
+        ctrl-&gt;rx_buf[ctrl-&gt;rx_len] = '\0';
+        cli_add_history(ctrl, ctrl-&gt;rx_buf);
+        cli_parse_and_execute(ctrl);
+        ctrl-&gt;rx_len = 0;
+        printf("\n&gt; ");
+    } else if (ch == 0x1B) {
+        /* 转义序列开始，进入转义处理状态 */
+        ctrl-&gt;state = CLI_ESC;
+    } else if (ch == '\b' || ch == 0x7F) {
+        /* 退格 */
+        if (ctrl-&gt;rx_len &gt; 0) {
+            ctrl-&gt;rx_len--;
+            printf("\b \b");
+        }
+    } else if (ch &gt;= 0x20 &amp;&amp; ch &lt;= 0x7E) {
+        /* 可打印字符 */
+        if (ctrl-&gt;rx_len &lt; sizeof(ctrl-&gt;rx_buf) - 1) {
+            ctrl-&gt;rx_buf[ctrl-&gt;rx_len++] = ch;
+            putchar(ch);
+        }
+    }
+}</code></pre>
+
+<div class="warning">
+  <p><strong>注意</strong>：转义序列处理是状态机，不要用简单的if-else硬编码。我见过有人用switch-case处理每个字符，结果代码写了一千多行还一堆bug。建议用状态表或者有限状态机库。</p>
+</div>
+
+<h3>19.6 实际项目中的CLI优化</h3>
+
+<p>在实际项目中，CLI还需要考虑几个问题：</p>
+
+<ul>
+  <li><strong>中断安全</strong>：串口接收在中断中，命令解析在主循环中。用环形队列做缓冲，避免中断和主循环竞争。</li>
+  <li><strong>超时处理</strong>：如果用户输入一半不输入了，设置一个超时定时器，超时后清空缓冲区。</li>
+  <li><strong>命令权限</strong>：有些命令（比如Flash擦除）需要用户确认，防止误操作。</li>
+</ul>
+
+<p>我记得有一次，产线工人用CLI批量烧录固件，结果不小心输入了"erase all"命令，整批产品的Flash都被擦空了。从那以后，我所有破坏性操作都加了二次确认：</p>
+
+<pre><code>static int cmd_flash_erase(int argc, char *argv[])
+{
+    printf("WARNING: This will erase Flash region!\n");
+    printf("Type 'yes' to continue: ");
+
+    char response[16];
+    if (cli_read_line(response, sizeof(response)) == 0) {
+        if (strcmp(response, "yes") != 0) {
+            printf("Operation cancelled.\n");
+            return 0;
+        }
+    }
+
+    /* 执行擦除操作 */
+    // ...
+}</code></pre>
+
+<p>嗯，CLI开发看似简单，但要做好其实不容易。从框架设计到命令解析，再到调试命令扩展，每一步都有坑。我建议你先实现一个最小可用的版本，然后逐步添加功能。记住，CLI是给开发者用的工具，好用比好看更重要。</p>
+
+<p>最后说一句：调试命令一定要留后门。比如加一个隐藏命令"debug_enter"，可以进入更底层的调试模式。我在好几个项目中都用这个方式，在客户现场快速定位问题。当然，这个命令要加编译开关，正式发布时关掉。</p>
+        <div class="footer-nav">
+            <a href="18.html">← 上一章</a>
+            <a href="index.html">📖 返回目录</a>
+            <a href="20.html">下一章 →</a>
+        </div>
+        <footer>公众号:蓝海资料掘金营，微信deep3321</footer>
+    </div>
+</div>
+</div>
+</body>
+</html>

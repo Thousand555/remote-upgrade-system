@@ -1,0 +1,384 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>第2章 嵌入式系统基础</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e9f0 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        /* 双边框设计：外边框 + 内阴影 */
+        .double-border {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #f1c40f;
+            border-radius: 24px;
+            box-shadow: 0 20px 30px -15px rgba(0,0,0,0.2), inset 0 1px 0 0 #fff8e0;
+            overflow: hidden;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+        }
+        .sidebar {
+            background: #fefcf5;
+            border-right: 2px solid #fdebb3;
+            padding: 24px 16px;
+        }
+        .sidebar h3 {
+            font-size: 1.4rem;
+            color: #b45f06;
+            border-left: 5px solid #f39c12;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+        .chapter-list {
+            list-style: none;
+        }
+        .chapter-list li {
+            margin-bottom: 6px;
+        }
+        .chapter-list a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #2c3e50;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .chapter-list a:hover {
+            background: #fdebd0;
+            transform: translateX(3px);
+        }
+        .chapter-list .active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 5px rgba(59,130,246,0.3);
+        }
+        .main-content {
+            padding: 30px 35px;
+            background: white;
+        }
+        .footer-nav {
+            margin-top: 45px;
+            padding-top: 20px;
+            border-top: 2px solid #f0e6d2;
+            display: flex;
+            justify-content: space-between;
+        }
+        .footer-nav a {
+            padding: 8px 24px;
+            background: #f1f5f9;
+            text-decoration: none;
+            color: #1e40af;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .footer-nav a:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #64748b;
+            border-top: 1px dashed #e2e8f0;
+            font-size: 0.9rem;
+        }
+        h2 { color: #1e3a8a; border-left: 6px solid #f59e0b; padding-left: 15px; margin: 20px 0 15px; }
+        h3 { color: #2c3e50; margin: 20px 0 10px; }
+        pre {
+            background: #2d2f36; color: #f8f8f2; padding: 15px; border-radius: 12px;
+            overflow-x: auto; font-family: 'JetBrains Mono', monospace; margin: 15px 0;
+        }
+        table {
+            width: 100%; border-collapse: collapse; margin: 15px 0; background: #fefce8;
+        }
+        th, td {
+            border: 1px solid #fcd34d; padding: 10px; text-align: left;
+        }
+        th { background: #fffbeb; }
+        .tip, .warning, .highlight {
+            padding: 12px 18px; border-radius: 16px; margin: 15px 0;
+        }
+        .tip { background: #e0f2fe; border-left: 6px solid #0ea5e9; }
+        .warning { background: #fee2e2; border-left: 6px solid #ef4444; }
+        .highlight { background: #fef9c3; border: 1px solid #facc15; }
+    </style>
+</head>
+<body>
+<div class="double-border">
+<div class="container">
+    <div class="sidebar">
+        <h3>📚 课程目录</h3>
+        <ul class="chapter-list">
+            <li><a href="01.html" class="">第1章 Bootloader入门</a></li>
+<li><a href="02.html" class="active">第2章 嵌入式系统基础</a></li>
+<li><a href="03.html" class="">第3章 开发环境搭建</a></li>
+<li><a href="04.html" class="">第4章 链接脚本深入</a></li>
+<li><a href="05.html" class="">第5章 启动代码分析</a></li>
+<li><a href="06.html" class="">第6章 中断向量表重映射</a></li>
+<li><a href="07.html" class="">第7章 Flash驱动开发</a></li>
+<li><a href="08.html" class="">第8章 串口通信协议</a></li>
+<li><a href="09.html" class="">第9章 固件包格式设计</a></li>
+<li><a href="10.html" class="">第10章 固件下载流程</a></li>
+<li><a href="11.html" class="">第11章 固件校验与完整性检查</a></li>
+<li><a href="12.html" class="">第12章 固件烧录与跳转</a></li>
+<li><a href="13.html" class="">第13章 双备份启动策略</a></li>
+<li><a href="14.html" class="">第14章 看门狗与异常处理</a></li>
+<li><a href="15.html" class="">第15章 固件加密与安全启动</a></li>
+<li><a href="16.html" class="">第16章 OTA升级原理</a></li>
+<li><a href="17.html" class="">第17章 Bootloader与APP交互</a></li>
+<li><a href="18.html" class="">第18章 多分区管理</a></li>
+<li><a href="19.html" class="">第19章 命令行接口(CLI)开发</a></li>
+<li><a href="20.html" class="">第20章 日志系统设计</a></li>
+<li><a href="21.html" class="">第21章 性能优化</a></li>
+<li><a href="22.html" class="">第22章 低功耗模式</a></li>
+<li><a href="23.html" class="">第23章 外设驱动封装</a></li>
+<li><a href="24.html" class="">第24章 单元测试与模拟</a></li>
+<li><a href="25.html" class="">第25章 硬件调试技巧</a></li>
+<li><a href="26.html" class="">第26章 常见问题排查</a></li>
+<li><a href="27.html" class="">第27章 RTOS集成</a></li>
+<li><a href="28.html" class="">第28章 量产烧录方案</a></li>
+<li><a href="29.html" class="">第29章 安全防护</a></li>
+<li><a href="30.html" class="">第30章 项目实战</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <h2>第2章：嵌入式系统基础：ARM Cortex-M架构概述、存储器映射与启动流程、中断向量表详解</h2>
+
+<h3>2.1 ARM Cortex-M 架构到底是个啥？</h3>
+
+<p>做 Bootloader 开发，绕不开 ARM Cortex-M 系列。我个人习惯把 Cortex-M 看作一个「极度精简、为嵌入式而生」的处理器家族。它不像 Cortex-A 那样跑 Linux，也不像 Cortex-R 那样搞实时控制，它就是为了单片机场景设计的——低功耗、低成本、中断响应快。</p>
+
+<p>你想想看，我们平时用的 STM32、GD32、NXP LPC 系列，内核基本都是 Cortex-M0、M3、M4 或者 M7。它们有个共同特点：<strong>采用哈佛架构</strong>，指令总线和数据总线分开。这意味着取指令和读写数据可以同时进行，效率比冯·诺依曼架构高不少。</p>
+
+<p>我记得刚入行那会儿，有个老工程师跟我说：「搞懂 Cortex-M 的寄存器模型，你就掌握了 Bootloader 的一半。」当时我不信，后来踩了坑才明白——确实如此。</p>
+
+<p>Cortex-M 内核有几个关键寄存器，你必须要记住：</p>
+<ul>
+    <li><strong>R0-R12</strong>：通用寄存器，随便用</li>
+    <li><strong>R13 (SP)</strong>：堆栈指针，分 MSP 和 PSP</li>
+    <li><strong>R14 (LR)</strong>：链接寄存器，保存返回地址</li>
+    <li><strong>R15 (PC)</strong>：程序计数器，指向当前指令</li>
+    <li><strong>xPSR</strong>：程序状态寄存器，存标志位</li>
+</ul>
+
+<p>嗯，这里要注意：Cortex-M 的堆栈是<strong>满递减</strong>的。什么意思？就是 SP 初始指向栈顶，压栈时 SP 先减，再存数据。这个细节在写 Bootloader 的汇编启动代码时特别重要，搞反了程序直接跑飞。</p>
+
+<div class="highlight">
+    <p><strong>核心要点：</strong>Cortex-M 只支持 Thumb/Thumb-2 指令集，不支持 ARM 指令集。这意味着所有代码必须是 16 位或 32 位混合的 Thumb 指令。你在写 Bootloader 时，编译器选项一定要选对，否则链接出来的二进制文件根本跑不起来。</p>
+</div>
+
+<h3>2.2 存储器映射——芯片的「地址地图」</h3>
+
+<p>每个 Cortex-M 芯片都有一个固定的存储器映射。说白了，就是芯片厂商把 4GB 的地址空间划分成几个区域，每个区域干不同的事。ARM 公司规定了一个标准布局，但具体怎么分配，还得看芯片厂商。</p>
+
+<p>标准映射是这样的：</p>
+
+<table>
+    <tr>
+        <th>地址范围</th>
+        <th>区域名称</th>
+        <th>用途</th>
+    </tr>
+    <tr>
+        <td>0x00000000 - 0x1FFFFFFF</td>
+        <td>Code 区</td>
+        <td>存放程序代码，通常映射到 Flash</td>
+    </tr>
+    <tr>
+        <td>0x20000000 - 0x3FFFFFFF</td>
+        <td>SRAM 区</td>
+        <td>存放运行时数据、堆栈</td>
+    </tr>
+    <tr>
+        <td>0x40000000 - 0x5FFFFFFF</td>
+        <td>外设区</td>
+        <td>映射 GPIO、UART、TIM 等外设寄存器</td>
+    </tr>
+    <tr>
+        <td>0x60000000 - 0x9FFFFFFF</td>
+        <td>外部 RAM 区</td>
+        <td>扩展内存，比如 SDRAM</td>
+    </tr>
+    <tr>
+        <td>0xE0000000 - 0xE00FFFFF</td>
+        <td>系统控制区</td>
+        <td>NVIC、MPU、SysTick 等内核外设</td>
+    </tr>
+</table>
+
+<p>我在项目中遇到过一个问题：某款国产芯片的 Flash 起始地址不是 0x08000000，而是 0x00000000。结果我按照 STM32 的习惯写了链接脚本，Bootloader 死活跳不到应用程序。查了两天才发现——<strong>不同芯片的 Flash 基地址可能不一样</strong>。所以，拿到一个新芯片，第一件事就是看数据手册的存储器映射章节。</p>
+
+<div class="tip">
+    <p><strong>我的建议：</strong>写 Bootloader 时，把 Flash 和 RAM 的起始地址、大小定义成宏。这样换芯片时只需要改几个宏定义，不用动核心逻辑。比如：</p>
+    <pre><code>#define FLASH_BASE     0x08000000
+#define FLASH_SIZE     0x00100000  // 1MB
+#define RAM_BASE       0x20000000
+#define RAM_SIZE       0x00020000  // 128KB</code></pre>
+</div>
+
+<h3>2.3 启动流程——芯片上电后发生了什么？</h3>
+
+<p>Cortex-M 的启动流程，说白了就三步：</p>
+<ol>
+    <li><strong>从地址 0x00000000 读取 SP 初始值</strong></li>
+    <li><strong>从地址 0x00000004 读取 PC 初始值（即 Reset_Handler 地址）</strong></li>
+    <li><strong>跳转到 Reset_Handler 执行</strong></li>
+</ol>
+
+<p>为什么会这样设计？因为 Cortex-M 硬件自动完成了这两次读取，不需要像传统 ARM 那样先执行一段汇编代码来初始化堆栈。这大大简化了启动流程。</p>
+
+<p>但这里有个坑：<strong>地址 0x00000000 和 0x00000004 存放的到底是什么？</strong>它们不是代码，而是中断向量表的前两个条目。第一个条目是栈顶指针，第二个条目是复位向量。</p>
+
+<p>我刚开始做 Bootloader 时，以为只要把应用程序烧到 Flash 里，复位后就能自动运行。结果发现——<strong>芯片复位后永远从 0x00000000 开始执行</strong>。如果你的 Bootloader 在 0x08000000，应用程序在 0x08010000，那复位后芯片根本不知道应用程序的存在。</p>
+
+<p>所以，Bootloader 的核心任务之一就是：<strong>在适当的时候，把控制权交给应用程序</strong>。怎么交？通过修改 PC 指针，跳转到应用程序的 Reset_Handler。</p>
+
+<div class="warning">
+    <p><strong>注意：</strong>跳转前必须做三件事：</p>
+    <ul>
+        <li>关闭所有外设中断（防止跳转后产生意外中断）</li>
+        <li>禁用系统滴答定时器 SysTick</li>
+        <li>将主堆栈指针 MSP 设置为应用程序的栈顶地址</li>
+    </ul>
+    <p>我曾经因为没关 SysTick，跳转到应用程序后，SysTick 中断还在用 Bootloader 的中断向量表，结果一进中断就跑飞。排查了整整一个下午。</p>
+</div>
+
+<h3>2.4 中断向量表详解——芯片的「紧急联络簿」</h3>
+
+<p>中断向量表，说白了就是一张表。表里按顺序记录了每个中断对应的处理函数地址。当某个中断发生时，硬件自动从表中找到对应的地址，跳过去执行。</p>
+
+<p>Cortex-M 的中断向量表长这样：</p>
+
+<table>
+    <tr>
+        <th>偏移地址</th>
+        <th>异常号</th>
+        <th>名称</th>
+        <th>描述</th>
+    </tr>
+    <tr>
+        <td>0x00</td>
+        <td>-</td>
+        <td>SP_initial</td>
+        <td>栈顶指针初始值</td>
+    </tr>
+    <tr>
+        <td>0x04</td>
+        <td>1</td>
+        <td>Reset_Handler</td>
+        <td>复位中断</td>
+    </tr>
+    <tr>
+        <td>0x08</td>
+        <td>2</td>
+        <td>NMI_Handler</td>
+        <td>不可屏蔽中断</td>
+    </tr>
+    <tr>
+        <td>0x0C</td>
+        <td>3</td>
+        <td>HardFault_Handler</td>
+        <td>硬错误</td>
+    </tr>
+    <tr>
+        <td>0x10</td>
+        <td>4</td>
+        <td>MemManage_Handler</td>
+        <td>内存管理错误（M3/M4/M7）</td>
+    </tr>
+    <tr>
+        <td>0x14</td>
+        <td>5</td>
+        <td>BusFault_Handler</td>
+        <td>总线错误（M3/M4/M7）</td>
+    </tr>
+    <tr>
+        <td>0x18</td>
+        <td>6</td>
+        <td>UsageFault_Handler</td>
+        <td>用法错误（M3/M4/M7）</td>
+    </tr>
+    <tr>
+        <td>...</td>
+        <td>...</td>
+        <td>...</td>
+        <td>...</td>
+    </tr>
+    <tr>
+        <td>0x40</td>
+        <td>16</td>
+        <td>IRQ0</td>
+        <td>第一个外设中断</td>
+    </tr>
+</table>
+
+<p>注意看，前 16 个是系统异常（包括复位、NMI、各种 Fault），从第 16 个开始才是外设中断。每个条目占 4 字节，所以第 n 个中断的地址偏移就是 <code>0x40 + n * 4</code>。</p>
+
+<p>在 Bootloader 开发中，中断向量表有个极其重要的概念——<strong>向量表重定位</strong>。什么意思？就是告诉硬件：「别去 0x00000000 找向量表了，去 0x08010000 找。」</p>
+
+<p>Cortex-M 提供了一个寄存器叫 <strong>VTOR（Vector Table Offset Register）</strong>，专门干这个事。你只需要把应用程序的向量表基地址写进去，硬件就会自动从新地址读取中断处理函数。</p>
+
+<p>代码实现很简单：</p>
+
+<pre><code>/* 设置向量表偏移 */
+#define APP_VECTOR_TABLE  0x08010000
+
+void jump_to_app(void)
+{
+    uint32_t app_sp;
+    uint32_t app_pc;
+    void (*app_entry)(void);
+    
+    /* 1. 从应用程序向量表读取栈顶指针 */
+    app_sp = *(volatile uint32_t *)APP_VECTOR_TABLE;
+    
+    /* 2. 从应用程序向量表读取复位向量 */
+    app_pc = *(volatile uint32_t *)(APP_VECTOR_TABLE + 4);
+    
+    /* 3. 设置主堆栈指针 */
+    __set_MSP(app_sp);
+    
+    /* 4. 设置向量表偏移 */
+    SCB->VTOR = APP_VECTOR_TABLE;
+    
+    /* 5. 跳转到应用程序 */
+    app_entry = (void (*)(void))app_pc;
+    app_entry();
+}</code></pre>
+
+<div class="highlight">
+    <p><strong>关键点：</strong>设置 VTOR 必须在跳转之前完成。否则，应用程序里一旦发生中断，硬件还是去原来的向量表找处理函数，结果找到的是 Bootloader 的，程序就乱套了。</p>
+</div>
+
+<p>另外，有个细节容易被忽略：<strong>Cortex-M0/M0+ 没有 VTOR 寄存器</strong>。这意味着它们不支持向量表重定位。那怎么办？只能用「复制向量表到 SRAM」的方式，或者用「重映射」功能把 Flash 的某段地址映射到 0x00000000。具体怎么做，后面章节会详细讲。</p>
+
+<h3>2.5 小结</h3>
+
+<p>这一章的内容，说白了就是 Bootloader 的「地基」。搞懂了 Cortex-M 的架构、存储器映射、启动流程和中断向量表，你才能理解 Bootloader 为什么要那样写、那样跳转。</p>
+
+<p>我个人觉得，学 Bootloader 最忌讳的就是「知其然而不知其所以然」。很多人照着网上的代码抄一遍，能跑就完事了。但一旦遇到芯片换型号、Flash 地址变化、中断异常等问题，就完全抓瞎。</p>
+
+<p>所以，我建议你把这一章的内容吃透。尤其是中断向量表那部分，多画几张图，把地址、偏移、内容对应关系搞清楚。后面讲「Bootloader 跳转应用程序」时，你会回来感谢我的。</p>
+        <div class="footer-nav">
+            <a href="01.html">← 上一章</a>
+            <a href="index.html">📖 返回目录</a>
+            <a href="03.html">下一章 →</a>
+        </div>
+        <footer>公众号:蓝海资料掘金营，微信deep3321</footer>
+    </div>
+</div>
+</div>
+</body>
+</html>

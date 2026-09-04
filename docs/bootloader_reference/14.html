@@ -1,0 +1,451 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>第14章 看门狗与异常处理</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e9f0 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        /* 双边框设计：外边框 + 内阴影 */
+        .double-border {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #f1c40f;
+            border-radius: 24px;
+            box-shadow: 0 20px 30px -15px rgba(0,0,0,0.2), inset 0 1px 0 0 #fff8e0;
+            overflow: hidden;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+        }
+        .sidebar {
+            background: #fefcf5;
+            border-right: 2px solid #fdebb3;
+            padding: 24px 16px;
+        }
+        .sidebar h3 {
+            font-size: 1.4rem;
+            color: #b45f06;
+            border-left: 5px solid #f39c12;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+        .chapter-list {
+            list-style: none;
+        }
+        .chapter-list li {
+            margin-bottom: 6px;
+        }
+        .chapter-list a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #2c3e50;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .chapter-list a:hover {
+            background: #fdebd0;
+            transform: translateX(3px);
+        }
+        .chapter-list .active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 5px rgba(59,130,246,0.3);
+        }
+        .main-content {
+            padding: 30px 35px;
+            background: white;
+        }
+        .footer-nav {
+            margin-top: 45px;
+            padding-top: 20px;
+            border-top: 2px solid #f0e6d2;
+            display: flex;
+            justify-content: space-between;
+        }
+        .footer-nav a {
+            padding: 8px 24px;
+            background: #f1f5f9;
+            text-decoration: none;
+            color: #1e40af;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .footer-nav a:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #64748b;
+            border-top: 1px dashed #e2e8f0;
+            font-size: 0.9rem;
+        }
+        h2 { color: #1e3a8a; border-left: 6px solid #f59e0b; padding-left: 15px; margin: 20px 0 15px; }
+        h3 { color: #2c3e50; margin: 20px 0 10px; }
+        pre {
+            background: #2d2f36; color: #f8f8f2; padding: 15px; border-radius: 12px;
+            overflow-x: auto; font-family: 'JetBrains Mono', monospace; margin: 15px 0;
+        }
+        table {
+            width: 100%; border-collapse: collapse; margin: 15px 0; background: #fefce8;
+        }
+        th, td {
+            border: 1px solid #fcd34d; padding: 10px; text-align: left;
+        }
+        th { background: #fffbeb; }
+        .tip, .warning, .highlight {
+            padding: 12px 18px; border-radius: 16px; margin: 15px 0;
+        }
+        .tip { background: #e0f2fe; border-left: 6px solid #0ea5e9; }
+        .warning { background: #fee2e2; border-left: 6px solid #ef4444; }
+        .highlight { background: #fef9c3; border: 1px solid #facc15; }
+    </style>
+</head>
+<body>
+<div class="double-border">
+<div class="container">
+    <div class="sidebar">
+        <h3>📚 课程目录</h3>
+        <ul class="chapter-list">
+            <li><a href="01.html" class="">第1章 Bootloader入门</a></li>
+<li><a href="02.html" class="">第2章 嵌入式系统基础</a></li>
+<li><a href="03.html" class="">第3章 开发环境搭建</a></li>
+<li><a href="04.html" class="">第4章 链接脚本深入</a></li>
+<li><a href="05.html" class="">第5章 启动代码分析</a></li>
+<li><a href="06.html" class="">第6章 中断向量表重映射</a></li>
+<li><a href="07.html" class="">第7章 Flash驱动开发</a></li>
+<li><a href="08.html" class="">第8章 串口通信协议</a></li>
+<li><a href="09.html" class="">第9章 固件包格式设计</a></li>
+<li><a href="10.html" class="">第10章 固件下载流程</a></li>
+<li><a href="11.html" class="">第11章 固件校验与完整性检查</a></li>
+<li><a href="12.html" class="">第12章 固件烧录与跳转</a></li>
+<li><a href="13.html" class="">第13章 双备份启动策略</a></li>
+<li><a href="14.html" class="active">第14章 看门狗与异常处理</a></li>
+<li><a href="15.html" class="">第15章 固件加密与安全启动</a></li>
+<li><a href="16.html" class="">第16章 OTA升级原理</a></li>
+<li><a href="17.html" class="">第17章 Bootloader与APP交互</a></li>
+<li><a href="18.html" class="">第18章 多分区管理</a></li>
+<li><a href="19.html" class="">第19章 命令行接口(CLI)开发</a></li>
+<li><a href="20.html" class="">第20章 日志系统设计</a></li>
+<li><a href="21.html" class="">第21章 性能优化</a></li>
+<li><a href="22.html" class="">第22章 低功耗模式</a></li>
+<li><a href="23.html" class="">第23章 外设驱动封装</a></li>
+<li><a href="24.html" class="">第24章 单元测试与模拟</a></li>
+<li><a href="25.html" class="">第25章 硬件调试技巧</a></li>
+<li><a href="26.html" class="">第26章 常见问题排查</a></li>
+<li><a href="27.html" class="">第27章 RTOS集成</a></li>
+<li><a href="28.html" class="">第28章 量产烧录方案</a></li>
+<li><a href="29.html" class="">第29章 安全防护</a></li>
+<li><a href="30.html" class="">第30章 项目实战</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <h2>14. 看门狗与异常处理：独立看门狗(IWDG)配置、窗口看门狗(WWDG)使用、HardFault异常处理</h2>
+
+<p>嵌入式系统跑着跑着就死机了，这事儿你遇到过吧？</p>
+<p>我刚开始做产品那会儿，就吃过这个亏。设备在客户现场运行了三天，突然就卡死了，只能断电重启。后来查出来是某个极端条件下，程序陷入了死循环。从那以后，我对看门狗和异常处理就格外上心。</p>
+<p>说白了，看门狗就是系统的「保命符」。而异常处理，则是系统最后的「遗言」。今天咱们就把这两样东西彻底搞明白。</p>
+
+<h3>14.1 独立看门狗（IWDG）配置</h3>
+
+<p>独立看门狗，我习惯叫它「硬狗」。为什么叫「硬」？因为它用的是独立的RC振荡器，主时钟挂了它照样能跑。这在工业环境中特别重要。</p>
+
+<h4>14.1.1 IWDG的工作原理</h4>
+<p>IWDG本质上就是一个递减计数器。你给它设个初值，它就开始往下减。减到0了，系统就复位。你的任务就是在它减到0之前，重新把值填满——这就是所谓的「喂狗」。</p>
+
+<div class="highlight">
+  <p><strong>关键点：</strong>IWDG一旦启动，除了复位，没有任何办法能把它停下来。所以配置一定要谨慎。</p>
+</div>
+
+<h4>14.1.2 配置步骤</h4>
+<p>配置IWDG其实就三步，我总结一下：</p>
+<ol>
+  <li><strong>取消写保护</strong>：IWDG的预分频器和重装载寄存器默认是写保护的，需要先解锁</li>
+  <li><strong>设置分频系数和重装载值</strong>：决定看门狗的溢出时间</li>
+  <li><strong>启动IWDG</strong>：写入0xCCCC到关键字寄存器</li>
+</ol>
+
+<p>来看个实际代码，这是我项目里用过的配置：</p>
+
+<pre><code>// IWDG配置函数
+// 目标溢出时间：约1秒（LSI = 40kHz）
+void IWDG_Config(void)
+{
+    // 1. 取消写保护
+    IWDG-&gt;KR = 0x5555;
+    
+    // 2. 设置预分频器为64分频
+    // LSI 40kHz / 64 = 625Hz，每个计数周期约1.6ms
+    IWDG-&gt;PR = IWDG_Prescaler_64;
+    
+    // 3. 设置重装载值为625
+    // 溢出时间 = 625 * 1.6ms ≈ 1秒
+    IWDG-&gt;RLR = 625;
+    
+    // 4. 等待寄存器更新完成
+    while (IWDG-&gt;SR &amp; IWDG_SR_PVU);
+    while (IWDG-&gt;SR &amp; IWDG_SR_RVU);
+    
+    // 5. 启动IWDG
+    IWDG-&gt;KR = 0xCCCC;
+    
+    // 6. 立即喂狗一次，确保初始状态正常
+    IWDG-&gt;KR = 0xAAAA;
+}</code></pre>
+
+<div class="tip">
+  <p><strong>我的经验：</strong>喂狗时机很重要。我一般会在主循环的末尾喂狗，而不是在中断里。为什么？如果在中断里喂狗，主循环卡死了，中断还在跑，看门狗就形同虚设了。</p>
+</div>
+
+<h4>14.1.3 溢出时间计算</h4>
+<p>溢出时间的计算公式很简单：</p>
+<p><code>溢出时间 = (RLR + 1) × 分频系数 / LSI频率</code></p>
+
+<table>
+  <tr>
+    <th>分频系数</th>
+    <th>PR值</th>
+    <th>最大溢出时间（LSI=40kHz）</th>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>0</td>
+    <td>约0.1秒</td>
+  </tr>
+  <tr>
+    <td>8</td>
+    <td>1</td>
+    <td>约0.2秒</td>
+  </tr>
+  <tr>
+    <td>16</td>
+    <td>2</td>
+    <td>约0.4秒</td>
+  </tr>
+  <tr>
+    <td>32</td>
+    <td>3</td>
+    <td>约0.8秒</td>
+  </tr>
+  <tr>
+    <td>64</td>
+    <td>4</td>
+    <td>约1.6秒</td>
+  </tr>
+  <tr>
+    <td>128</td>
+    <td>5</td>
+    <td>约3.2秒</td>
+  </tr>
+  <tr>
+    <td>256</td>
+    <td>6</td>
+    <td>约6.4秒</td>
+  </tr>
+</table>
+
+<div class="warning">
+  <p><strong>注意：</strong>LSI频率不是精确的40kHz，它会在30-50kHz之间波动。所以实际溢出时间会有偏差。我一般会留出30%的余量。</p>
+</div>
+
+<h3>14.2 窗口看门狗（WWDG）使用</h3>
+
+<p>窗口看门狗，我管它叫「软狗」。它比IWDG多了一个「窗口」的概念。什么意思呢？就是喂狗不能太早，也不能太晚，必须在指定的时间窗口内喂。</p>
+
+<h4>14.2.1 为什么需要窗口？</h4>
+<p>你想想看，如果程序跑飞了，但恰好在一个循环里不断喂狗，那IWDG就失效了。WWDG就是为了解决这个问题——它要求你必须在特定的时间范围内喂狗。太早了说明程序执行太快，可能跳过了某些关键代码；太晚了说明程序卡住了。</p>
+
+<h4>14.2.2 WWDG配置示例</h4>
+
+<pre><code>// WWDG配置函数
+// 使用APB1时钟（36MHz），分频系数8
+// 窗口值：0x50，计数器初值：0x7F
+void WWDG_Config(void)
+{
+    // 1. 使能WWDG时钟
+    RCC-&gt;APB1ENR |= RCC_APB1ENR_WWDGEN;
+    
+    // 2. 设置分频系数为8
+    // 计数时钟 = 36MHz / 4096 / 8 ≈ 1098Hz
+    WWDG-&gt;CFR = WWDG_CFR_WDGTB_1;  // 分频系数8
+    
+    // 3. 设置窗口值
+    // 必须在计数器值大于0x50时喂狗
+    WWDG-&gt;CFR |= 0x50;
+    
+    // 4. 使能唤醒中断（可选）
+    WWDG-&gt;CFR |= WWDG_CFR_EWI;
+    
+    // 5. 设置计数器初值并启动
+    // 计数器值 = 0x7F，溢出时间约116ms
+    WWDG-&gt;CR = 0x7F | WWDG_CR_WDGA;
+    
+    // 6. 配置NVIC优先级
+    NVIC_SetPriority(WWDG_IRQn, 3);
+    NVIC_EnableIRQ(WWDG_IRQn);
+}
+
+// WWDG中断服务函数
+void WWDG_IRQHandler(void)
+{
+    // 清除中断标志
+    WWDG-&gt;SR = 0;
+    
+    // 在中断里喂狗
+    WWDG-&gt;CR = 0x7F;
+    
+    // 记录喂狗时间，用于调试
+    g_last_feed_time = GetSysTick();
+}</code></pre>
+
+<div class="highlight">
+  <p><strong>重要：</strong>WWDG的计数器值范围是0x3F到0x7F。低于0x3F时，系统会立即复位。所以喂狗时，必须把计数器值设置到0x40以上。</p>
+</div>
+
+<h4>14.2.3 IWDG vs WWDG 选型建议</h4>
+
+<table>
+  <tr>
+    <th>特性</th>
+    <th>IWDG</th>
+    <th>WWDG</th>
+  </tr>
+  <tr>
+    <td>时钟源</td>
+    <td>独立RC振荡器</td>
+    <td>系统时钟（APB1）</td>
+  </tr>
+  <tr>
+    <td>精度</td>
+    <td>较低（30%-50%偏差）</td>
+    <td>高（与系统时钟一致）</td>
+  </tr>
+  <tr>
+    <td>窗口功能</td>
+    <td>无</td>
+    <td>有</td>
+  </tr>
+  <tr>
+    <td>停止模式</td>
+    <td>继续运行</td>
+    <td>停止</td>
+  </tr>
+  <tr>
+    <td>典型应用</td>
+    <td>系统级保护</td>
+    <td>任务时序监控</td>
+  </tr>
+</table>
+
+<p>我个人习惯是：关键系统用IWDG做最后防线，任务调度用WWDG做时序监控。两者配合使用，效果最好。</p>
+
+<h3>14.3 HardFault异常处理</h3>
+
+<p>HardFault，说白了就是系统出了它自己都搞不定的错误。比如访问了不存在的地址、执行了非法指令、除数为零等等。这时候系统会跳转到HardFault处理函数。</p>
+
+<h4>14.3.1 常见的HardFault原因</h4>
+<ul>
+  <li><strong>指针越界</strong>：野指针、数组越界访问</li>
+  <li><strong>栈溢出</strong>：递归太深、局部变量太大</li>
+  <li><strong>中断优先级配置错误</strong>：导致中断嵌套异常</li>
+  <li><strong>外设访问时序错误</strong>：比如在时钟没准备好时访问外设</li>
+</ul>
+
+<div class="tip">
+  <p><strong>我曾经遇到过一个坑：</strong>在中断里调用了printf函数，而printf内部用了动态内存分配。结果堆栈冲突，直接HardFault。从那以后，我定了个规矩——中断里绝不调用标准库函数。</p>
+</div>
+
+<h4>14.3.2 捕获HardFault现场信息</h4>
+<p>系统进入HardFault时，会保存一些关键寄存器。把这些信息记录下来，对定位问题非常有帮助。</p>
+
+<pre><code>// HardFault处理函数
+void HardFault_Handler(void)
+{
+    // 获取堆栈指针
+    uint32_t *stack_ptr;
+    
+    // 判断是MSP还是PSP
+    if (__get_IPSR() &amp; 0xFF)  // 在中断中
+    {
+        stack_ptr = (uint32_t*)__get_MSP();
+    }
+    else
+    {
+        stack_ptr = (uint32_t*)__get_PSP();
+    }
+    
+    // 保存关键寄存器信息
+    FaultInfo.R0 = stack_ptr[0];
+    FaultInfo.R1 = stack_ptr[1];
+    FaultInfo.R2 = stack_ptr[2];
+    FaultInfo.R3 = stack_ptr[3];
+    FaultInfo.R12 = stack_ptr[4];
+    FaultInfo.LR = stack_ptr[5];
+    FaultInfo.PC = stack_ptr[6];
+    FaultInfo.xPSR = stack_ptr[7];
+    
+    // 保存到非易失存储器（如Flash或EEPROM）
+    SaveFaultInfoToFlash(&amp;FaultInfo);
+    
+    // 记录错误日志
+    LogError("HardFault occurred at PC: 0x%08X", FaultInfo.PC);
+    
+    // 系统复位
+    NVIC_SystemReset();
+    
+    while(1);
+}</code></pre>
+
+<h4>14.3.3 实用的调试技巧</h4>
+<p>光捕获信息还不够，还得会分析。我分享几个实用技巧：</p>
+
+<ol>
+  <li><strong>查看PC指针</strong>：PC指向的地址就是出错的指令位置。用反汇编工具查看这个地址附近的代码。</li>
+  <li><strong>分析LR寄存器</strong>：LR里存的是返回地址，能告诉你是在哪个函数里出的问题。</li>
+  <li><strong>检查栈回溯</strong>：通过栈里的返回地址，可以还原出函数调用链。</li>
+</ol>
+
+<div class="highlight">
+  <p><strong>我的调试流程：</strong>拿到PC地址 → 反汇编查看指令 → 分析是哪种异常（总线错误、用法错误等）→ 检查相关变量和外设状态 → 定位问题根源。</p>
+</div>
+
+<h4>14.3.4 预防措施</h4>
+<p>与其等HardFault发生了再处理，不如提前预防。我总结了几个经验：</p>
+
+<ul>
+  <li><strong>启用MPU</strong>：内存保护单元可以防止非法访问，在MPU触发异常时，信息比HardFault更详细</li>
+  <li><strong>使用断言</strong>：在关键参数传入时做合法性检查</li>
+  <li><strong>栈空间监控</strong>：定期检查栈使用情况，防止溢出</li>
+  <li><strong>外设访问加锁</strong>：对共享资源使用互斥访问</li>
+</ul>
+
+<div class="warning">
+  <p><strong>切记：</strong>HardFault处理函数里不要做复杂操作。我见过有人在里面调用printf、malloc，结果再次触发HardFault，形成死循环。简单记录、保存现场、复位，就够了。</p>
+</div>
+
+<p>好了，看门狗和异常处理就讲到这里。这些东西平时可能用不上，但一旦出了问题，就是救命稻草。我建议你在项目初期就把这些机制加上，别等到出问题了再补——那时候往往已经晚了。</p>
+        <div class="footer-nav">
+            <a href="13.html">← 上一章</a>
+            <a href="index.html">📖 返回目录</a>
+            <a href="15.html">下一章 →</a>
+        </div>
+        <footer>公众号:蓝海资料掘金营，微信deep3321</footer>
+    </div>
+</div>
+</div>
+</body>
+</html>

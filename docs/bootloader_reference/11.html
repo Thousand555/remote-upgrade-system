@@ -1,0 +1,415 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>第11章 固件校验与完整性检查</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e9f0 100%);
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        /* 双边框设计：外边框 + 内阴影 */
+        .double-border {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #f1c40f;
+            border-radius: 24px;
+            box-shadow: 0 20px 30px -15px rgba(0,0,0,0.2), inset 0 1px 0 0 #fff8e0;
+            overflow: hidden;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 0;
+        }
+        .sidebar {
+            background: #fefcf5;
+            border-right: 2px solid #fdebb3;
+            padding: 24px 16px;
+        }
+        .sidebar h3 {
+            font-size: 1.4rem;
+            color: #b45f06;
+            border-left: 5px solid #f39c12;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+        .chapter-list {
+            list-style: none;
+        }
+        .chapter-list li {
+            margin-bottom: 6px;
+        }
+        .chapter-list a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #2c3e50;
+            border-radius: 12px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .chapter-list a:hover {
+            background: #fdebd0;
+            transform: translateX(3px);
+        }
+        .chapter-list .active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 5px rgba(59,130,246,0.3);
+        }
+        .main-content {
+            padding: 30px 35px;
+            background: white;
+        }
+        .footer-nav {
+            margin-top: 45px;
+            padding-top: 20px;
+            border-top: 2px solid #f0e6d2;
+            display: flex;
+            justify-content: space-between;
+        }
+        .footer-nav a {
+            padding: 8px 24px;
+            background: #f1f5f9;
+            text-decoration: none;
+            color: #1e40af;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .footer-nav a:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #64748b;
+            border-top: 1px dashed #e2e8f0;
+            font-size: 0.9rem;
+        }
+        h2 { color: #1e3a8a; border-left: 6px solid #f59e0b; padding-left: 15px; margin: 20px 0 15px; }
+        h3 { color: #2c3e50; margin: 20px 0 10px; }
+        pre {
+            background: #2d2f36; color: #f8f8f2; padding: 15px; border-radius: 12px;
+            overflow-x: auto; font-family: 'JetBrains Mono', monospace; margin: 15px 0;
+        }
+        table {
+            width: 100%; border-collapse: collapse; margin: 15px 0; background: #fefce8;
+        }
+        th, td {
+            border: 1px solid #fcd34d; padding: 10px; text-align: left;
+        }
+        th { background: #fffbeb; }
+        .tip, .warning, .highlight {
+            padding: 12px 18px; border-radius: 16px; margin: 15px 0;
+        }
+        .tip { background: #e0f2fe; border-left: 6px solid #0ea5e9; }
+        .warning { background: #fee2e2; border-left: 6px solid #ef4444; }
+        .highlight { background: #fef9c3; border: 1px solid #facc15; }
+    </style>
+</head>
+<body>
+<div class="double-border">
+<div class="container">
+    <div class="sidebar">
+        <h3>📚 课程目录</h3>
+        <ul class="chapter-list">
+            <li><a href="01.html" class="">第1章 Bootloader入门</a></li>
+<li><a href="02.html" class="">第2章 嵌入式系统基础</a></li>
+<li><a href="03.html" class="">第3章 开发环境搭建</a></li>
+<li><a href="04.html" class="">第4章 链接脚本深入</a></li>
+<li><a href="05.html" class="">第5章 启动代码分析</a></li>
+<li><a href="06.html" class="">第6章 中断向量表重映射</a></li>
+<li><a href="07.html" class="">第7章 Flash驱动开发</a></li>
+<li><a href="08.html" class="">第8章 串口通信协议</a></li>
+<li><a href="09.html" class="">第9章 固件包格式设计</a></li>
+<li><a href="10.html" class="">第10章 固件下载流程</a></li>
+<li><a href="11.html" class="active">第11章 固件校验与完整性检查</a></li>
+<li><a href="12.html" class="">第12章 固件烧录与跳转</a></li>
+<li><a href="13.html" class="">第13章 双备份启动策略</a></li>
+<li><a href="14.html" class="">第14章 看门狗与异常处理</a></li>
+<li><a href="15.html" class="">第15章 固件加密与安全启动</a></li>
+<li><a href="16.html" class="">第16章 OTA升级原理</a></li>
+<li><a href="17.html" class="">第17章 Bootloader与APP交互</a></li>
+<li><a href="18.html" class="">第18章 多分区管理</a></li>
+<li><a href="19.html" class="">第19章 命令行接口(CLI)开发</a></li>
+<li><a href="20.html" class="">第20章 日志系统设计</a></li>
+<li><a href="21.html" class="">第21章 性能优化</a></li>
+<li><a href="22.html" class="">第22章 低功耗模式</a></li>
+<li><a href="23.html" class="">第23章 外设驱动封装</a></li>
+<li><a href="24.html" class="">第24章 单元测试与模拟</a></li>
+<li><a href="25.html" class="">第25章 硬件调试技巧</a></li>
+<li><a href="26.html" class="">第26章 常见问题排查</a></li>
+<li><a href="27.html" class="">第27章 RTOS集成</a></li>
+<li><a href="28.html" class="">第28章 量产烧录方案</a></li>
+<li><a href="29.html" class="">第29章 安全防护</a></li>
+<li><a href="30.html" class="">第30章 项目实战</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <h2>11、固件校验与完整性检查：CRC校验实现、SHA256哈希校验、签名验证流程</h2>
+
+<p>各位同学，今天我们来聊聊Bootloader里一个绕不开的话题——固件校验。</p>
+
+<p>说白了，就是你怎么确保你下载到芯片里的固件是完整的、没被篡改过的。我刚开始做Bootloader那会儿，觉得这步可有可无，直到有一次现场升级把设备刷成砖了……嗯，从那以后我再也不敢跳过校验了。</p>
+
+<h3>11.1 为什么需要固件校验？</h3>
+
+<p>你想想看，固件在传输过程中可能被干扰，存储介质也可能有坏块。更严重的是，如果有人恶意篡改了固件，你的设备可能就被植入后门了。</p>
+
+<p>所以，Bootloader在跳转到新固件之前，必须做三件事：</p>
+
+<ul>
+  <li><strong>完整性检查</strong>：固件有没有被损坏？</li>
+  <li><strong>一致性检查</strong>：固件是不是完整下载了？</li>
+  <li><strong>合法性检查</strong>：固件是不是来自可信的发布方？</li>
+</ul>
+
+<p>这三个问题，分别对应我们今天要讲的三种技术：CRC、SHA256、签名验证。</p>
+
+<h3>11.2 CRC校验：轻量级的完整性守护者</h3>
+
+<p>CRC（循环冗余校验）是我个人最喜欢用的快速校验方式。它计算量小，硬件支持好，适合在资源受限的嵌入式系统里用。</p>
+
+<p>CRC的原理不复杂：把数据看作一个巨大的二进制数，然后用一个固定的多项式去除，余数就是CRC值。接收方用同样的多项式再算一遍，如果余数相同，说明数据没变。</p>
+
+<p>我在项目中遇到过一个问题：CRC多项式选错了，导致校验总是失败。后来发现，不同的CRC标准（CRC-16、CRC-32、CRC-CCITT）用的多项式不一样，千万别搞混。</p>
+
+<div class="highlight">
+  <p><strong>常用CRC标准速查表</strong></p>
+  <table>
+    <tr>
+      <th>标准</th>
+      <th>多项式</th>
+      <th>宽度</th>
+      <th>典型应用</th>
+    </tr>
+    <tr>
+      <td>CRC-8</td>
+      <td>0x07</td>
+      <td>8位</td>
+      <td>1-Wire总线</td>
+    </tr>
+    <tr>
+      <td>CRC-16-IBM</td>
+      <td>0x8005</td>
+      <td>16位</td>
+      <td>Modbus协议</td>
+    </tr>
+    <tr>
+      <td>CRC-32</td>
+      <td>0x04C11DB7</td>
+      <td>32位</td>
+      <td>以太网、ZIP文件</td>
+    </tr>
+    <tr>
+      <td>CRC-CCITT</td>
+      <td>0x1021</td>
+      <td>16位</td>
+      <td>XMODEM、蓝牙</td>
+    </tr>
+  </table>
+</div>
+
+<p>下面是一个CRC-32的软件实现示例，我习惯用查表法，速度比逐位计算快很多：</p>
+
+<pre><code>// CRC-32查表法实现
+static uint32_t crc32_table[256];
+
+void crc32_init_table(void) {
+    for (uint32_t i = 0; i &lt; 256; i++) {
+        uint32_t crc = i;
+        for (int j = 0; j &lt; 8; j++) {
+            if (crc &amp; 1)
+                crc = (crc &gt;&gt; 1) ^ 0xEDB88320;
+            else
+                crc &gt;&gt;= 1;
+        }
+        crc32_table[i] = crc;
+    }
+}
+
+uint32_t crc32_calc(uint8_t *data, uint32_t len) {
+    uint32_t crc = 0xFFFFFFFF;
+    for (uint32_t i = 0; i &lt; len; i++) {
+        uint8_t index = (crc ^ data[i]) &amp; 0xFF;
+        crc = (crc &gt;&gt; 8) ^ crc32_table[index];
+    }
+    return crc ^ 0xFFFFFFFF;
+}</code></pre>
+
+<div class="tip">
+  <p><strong>小技巧</strong>：CRC-32的初始值和最终异或值都是0xFFFFFFFF，这是标准做法。如果你发现和别人的CRC算出来不一样，先检查这两个参数。</p>
+</div>
+
+<h3>11.3 SHA256哈希校验：更安全的完整性保证</h3>
+
+<p>CRC虽然快，但它有个致命弱点——容易被碰撞。说白了，就是你能故意构造两个不同的数据，算出相同的CRC值。这在安全场景下是不能接受的。</p>
+
+<p>SHA256就不一样了。它是单向哈希函数，输出256位的摘要。哪怕你只改了一个比特，整个摘要都会变得面目全非。而且，从摘要反推原始数据，在计算上是不可行的。</p>
+
+<p>我曾经在一个OTA升级项目里，用CRC校验固件头，用SHA256校验整个固件体。这样既保证了速度，又保证了安全。</p>
+
+<p>SHA256的计算过程比较复杂，我直接给一个常用的实现接口：</p>
+
+<pre><code>// SHA256上下文结构体
+typedef struct {
+    uint32_t state[8];    // 哈希状态
+    uint64_t count;       // 已处理字节数
+    uint8_t  buffer[64];  // 数据缓冲区
+} SHA256_CTX;
+
+// 接口函数
+void sha256_init(SHA256_CTX *ctx);
+void sha256_update(SHA256_CTX *ctx, uint8_t *data, uint32_t len);
+void sha256_final(SHA256_CTX *ctx, uint8_t hash[32]);</code></pre>
+
+<p>使用起来很简单：</p>
+
+<pre><code>uint8_t firmware_hash[32];
+SHA256_CTX ctx;
+
+sha256_init(&amp;ctx);
+sha256_update(&amp;ctx, firmware_data, firmware_size);
+sha256_final(&amp;ctx, firmware_hash);
+
+// 比较计算出的hash和固件头中存储的hash
+if (memcmp(firmware_hash, expected_hash, 32) == 0) {
+    // 校验通过
+} else {
+    // 固件损坏，拒绝启动
+}</code></pre>
+
+<div class="warning">
+  <p><strong>注意</strong>：SHA256的计算量比CRC大得多。在低主频的MCU上，校验一个几MB的固件可能需要好几秒。我建议在Bootloader里用DMA加速，或者只在关键区域做哈希校验。</p>
+</div>
+
+<h3>11.4 签名验证流程：确保固件来源可信</h3>
+
+<p>CRC和SHA256只能保证固件没被损坏，但保证不了固件是谁写的。如果有人伪造了一个固件，算好了正确的哈希值，你的设备照样会认。</p>
+
+<p>这时候就需要签名验证了。签名验证用的是非对称加密算法，比如RSA或ECDSA。流程是这样的：</p>
+
+<ol>
+  <li><strong>签名阶段（在PC端完成）</strong>：
+    <ul>
+      <li>计算固件的SHA256哈希值</li>
+      <li>用私钥对哈希值进行加密，生成签名</li>
+      <li>将签名附加到固件末尾</li>
+    </ul>
+  </li>
+  <li><strong>验证阶段（在Bootloader中完成）</strong>：
+    <ul>
+      <li>计算固件的SHA256哈希值</li>
+      <li>用公钥解密签名，得到原始哈希值</li>
+      <li>比较两个哈希值是否一致</li>
+    </ul>
+  </li>
+</ol>
+
+<p>嗯，这里要注意：公钥是硬编码在Bootloader里的，私钥要严格保管。我见过一个项目，私钥被提交到了Git仓库里……那场面，简直是灾难。</p>
+
+<p>下面是一个简化的RSA签名验证流程：</p>
+
+<pre><code>// 签名验证流程（伪代码）
+int verify_firmware_signature(uint8_t *firmware, uint32_t size) {
+    uint8_t hash[32];
+    uint8_t decrypted_hash[32];
+    
+    // 1. 计算固件哈希
+    sha256_calc(firmware, size - SIGNATURE_SIZE, hash);
+    
+    // 2. 提取签名（固件末尾）
+    uint8_t *signature = firmware + size - SIGNATURE_SIZE;
+    
+    // 3. 用公钥解密签名
+    rsa_public_decrypt(signature, SIGNATURE_SIZE, decrypted_hash, public_key);
+    
+    // 4. 比较哈希值
+    if (memcmp(hash, decrypted_hash, 32) == 0) {
+        return 1;  // 验证通过
+    }
+    return 0;  // 验证失败
+}</code></pre>
+
+<div class="highlight">
+  <p><strong>关键点</strong>：签名验证的强度取决于密钥长度和算法选择。我个人建议：</p>
+  <ul>
+    <li>RSA至少用2048位，ECDSA用P-256曲线</li>
+    <li>公钥要写在Bootloader的只读区域，防止被篡改</li>
+    <li>签名验证失败时，Bootloader绝对不能跳转到固件</li>
+  </ul>
+</div>
+
+<h3>11.5 三种校验方式的对比与选择</h3>
+
+<p>说了这么多，到底该用哪种？我根据自己的经验，给一个参考：</p>
+
+<table>
+  <tr>
+    <th>校验方式</th>
+    <th>安全性</th>
+    <th>计算速度</th>
+    <th>资源消耗</th>
+    <th>适用场景</th>
+  </tr>
+  <tr>
+    <td>CRC</td>
+    <td>低（易碰撞）</td>
+    <td>极快</td>
+    <td>极低</td>
+    <td>传输校验、快速检查</td>
+  </tr>
+  <tr>
+    <td>SHA256</td>
+    <td>高（无碰撞）</td>
+    <td>中等</td>
+    <td>中等</td>
+    <td>完整性验证</td>
+  </tr>
+  <tr>
+    <td>签名验证</td>
+    <td>极高（防篡改）</td>
+    <td>慢</td>
+    <td>高</td>
+    <td>安全启动、OTA升级</td>
+  </tr>
+</table>
+
+<p>在实际项目中，我通常这样组合：</p>
+
+<ul>
+  <li><strong>普通产品</strong>：CRC校验固件头 + SHA256校验固件体</li>
+  <li><strong>安全产品</strong>：SHA256 + RSA/ECDSA签名验证</li>
+  <li><strong>高性能场景</strong>：硬件CRC + 硬件SHA加速 + 签名验证</li>
+</ul>
+
+<div class="tip">
+  <p><strong>避坑指南</strong>：我曾经在一个项目里只用了CRC校验，结果被攻击者用CRC碰撞绕过了。从那以后，凡是涉及OTA升级的，我至少会用SHA256。签名验证虽然慢，但它是最后一道防线，值得花那几秒钟。</p>
+</div>
+
+<h3>11.6 总结</h3>
+
+<p>固件校验是Bootloader的看门狗，它决定了你的设备会不会被恶意固件攻破。CRC是轻骑兵，SHA256是正规军，签名验证是特种部队——各有各的用处，关键是要搭配得当。</p>
+
+<p>最后提醒一句：校验逻辑一定要写在Bootloader里，而且要在跳转到固件之前执行。如果等固件跑起来了再校验，那就晚了。</p>
+
+<p>下一章，我们会讲固件加密与解密，到时候再聊聊怎么让固件在存储和传输过程中都保持安全。</p>
+        <div class="footer-nav">
+            <a href="10.html">← 上一章</a>
+            <a href="index.html">📖 返回目录</a>
+            <a href="12.html">下一章 →</a>
+        </div>
+        <footer>公众号:蓝海资料掘金营，微信deep3321</footer>
+    </div>
+</div>
+</div>
+</body>
+</html>
